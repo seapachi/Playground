@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>トレーニング</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/vexflow/1.2.93/vexflow-min.js"></script>
+    <style>
+        .piano {
+            display: flex;
+            justify-content: center;
+            margin-top: 20px;
+        }
+        .key {
+            width: 40px;
+            height: 120px;
+            border: 1px solid #000;
+            display: inline-block;
+            background-color: white;
+            text-align: center;
+            line-height: 120px;
+            font-size: 18px;
+            cursor: pointer;
+            user-select: none;
+            touch-action: manipulation;
+        }
+        .key.black {
+            width: 30px;
+            height: 80px;
+            background-color: black;
+            color: white;
+            margin-left: -15px;
+            margin-right: -15px;
+            position: relative;
+            z-index: 1;
+        }
+        .key:active {
+            background-color: #ddd;
+        }
+        .staff-container {
+            display: flex;
+            justify-content: center;
+            margin: 20px;
+        }
+        .message {
+            text-align: center;
+            font-size: 1.5em;
+            margin: 20px;
+        }
+        #staff {
+            width: 600px;
+            height: 200px;
+        }
+    </style>
+</head>
+<body>
+    
+    <h2>音符当てゲーム</h2>
+    <button id="startGameButton">スタート</button>
+    <button id="startAudioButton" disabled>音を有効化</button>
+    <div class="staff-container">
+        <div id="staff"></div>
+    </div>
+    <div class="message" id="message">スタートボタンを押してください</div>
+    
+    <div class="piano">
+        <div class="key" data-note="C4">C</div> 
+        <div class="key black" data-note="C#4">C#</div>
+        <div class="key" data-note="D4">D</div>
+        <div class="key black" data-note="D#4">D#</div>
+        <div class="key" data-note="E4">E</div>
+        <div class="key" data-note="F4">F</div>
+        <div class="key black" data-note="F#4">F#</div>
+        <div class="key" data-note="G4">G</div>
+        <div class="key black" data-note="G#4">G#</div>
+        <div class="key" data-note="A4">A</div>
+        <div class="key black" data-note="A#4">A#</div>
+        <div class="key" data-note="B4">B</div>
+        <div class="key" data-note="C5">C5</div>
+    </div>
+    
+    <script>
+        let synth;
+        let correctNote;
+        let attempts = 0;
+        let mistakes = 0;
+        const maxAttempts = 10;
+
+        document.getElementById("startGameButton").addEventListener("click", () => {
+            resetGame(); // 変数をリセット
+            document.getElementById("message").textContent = "音を有効化してください";
+            document.getElementById("startAudioButton").disabled = false;
+        });
+
+        function resetGame() {
+            attempts = 0;
+            mistakes = 0;
+        }
+
+        document.getElementById("startAudioButton").addEventListener("click", async () => {
+            await Tone.start();
+            alert("音が有効になりました！");
+            synth = new Tone.Synth().toDestination();
+            generateRandomNote();
+        });
+
+        function playNote(note) {
+            if (!synth) return;
+            synth.triggerAttackRelease(note, "8n");
+            checkAnswer(note);
+        }
+
+        function checkAnswer(note) {
+            const messageElement = document.getElementById("message");
+            if (note === correctNote) {
+                messageElement.textContent = "せいかい！つぎのおんぷへ！";
+                attempts++;
+                if (attempts >= maxAttempts) {
+                    endGame();
+                } else {
+                    setTimeout(generateRandomNote, 1000);
+                }
+            } else {
+                messageElement.textContent = "まちがい！もういちど！";
+                mistakes++;
+            }
+        }
+
+        function generateRandomNote() {
+            const notes = ["c/4", "d/4", "e/4", "f/4", "g/4", "a/4", "b/4", "c/5"];
+            const noteNames = ["C4", "D4", "E4", "F4", "G4", "A4", "B4", "C5"];
+            let index = Math.floor(Math.random() * notes.length);
+            correctNote = noteNames[index];
+            drawStaff(notes[index]);
+        }
+
+        function drawStaff(note) {
+            const staffDiv = document.getElementById("staff");
+            staffDiv.innerHTML = "";
+
+            const renderer = new Vex.Flow.Renderer(staffDiv, Vex.Flow.Renderer.Backends.SVG);
+            const context = renderer.getContext();
+
+            const stave = new Vex.Flow.Stave(50, 40, 500);
+            stave.addClef("treble").setContext(context).draw();
+
+            const notes = [
+                new Vex.Flow.StaveNote({ keys: [note], duration: "q" })
+            ];
+
+            const voice = new Vex.Flow.Voice({ num_beats: 1, beat_value: 4 });
+            voice.addTickables(notes);
+            new Vex.Flow.Formatter().joinVoices([voice]).format([voice], 400);
+            voice.draw(context, stave);
+        }
+
+        function endGame() {
+            const score = 100 - mistakes;
+            document.getElementById("message").textContent = `おわり！てんすうは ${score} てんです。`;
+        }
+
+        document.querySelectorAll('.key').forEach(key => {
+            key.addEventListener('mousedown', () => playNote(key.dataset.note));
+            key.addEventListener('touchstart', (event) => {
+                event.preventDefault();
+                playNote(key.dataset.note);
+            });
+        });
+    </script>
+</body>
+</html>
