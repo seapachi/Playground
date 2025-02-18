@@ -52,17 +52,28 @@
             width: 600px;
             height: 200px;
         }
+        .reward-image {
+            display: none;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 300px;
+            height: 300px;
+        }
     </style>
 </head>
 <body>
     
-    <h2>音符当てゲーム</h2>
+    <h2>音符当て</h2>
     <button id="startGameButton">スタート</button>
     <button id="startAudioButton" disabled>音を有効化</button>
     <div class="staff-container">
         <div id="staff"></div>
     </div>
     <div class="message" id="message">スタートボタンを押してください</div>
+    
+    <img id="rewardImage" class="reward-image" src="https://via.placeholder.com/300" alt="Reward">
     
     <div class="piano">
         <div class="key" data-note="C4">C</div> 
@@ -85,10 +96,18 @@
         let correctNote;
         let attempts = 0;
         let mistakes = 0;
+        let consecutiveCorrect = 0;
+        let score = 0;
+        let responseTimes = [];
+        let mistakeCount = {};
+        let startTime;
         const maxAttempts = 10;
+        const baseScore = 10;
+        const fastBonus = 20;
+        const penalty = -10;
 
         document.getElementById("startGameButton").addEventListener("click", () => {
-            resetGame(); // 変数をリセット
+            resetGame();
             document.getElementById("message").textContent = "音を有効化してください";
             document.getElementById("startAudioButton").disabled = false;
         });
@@ -96,75 +115,126 @@
         function resetGame() {
             attempts = 0;
             mistakes = 0;
+            score = 0;
+            responseTimes = [];
+            mistakeCount = {};
+            consecutiveCorrect = 0;
+            document.getElementById("rewardImage").style.display = "none";
         }
 
         document.getElementById("startAudioButton").addEventListener("click", async () => {
             await Tone.start();
             alert("音が有効になりました！");
             synth = new Tone.Synth().toDestination();
+            document.getElementById("message").textContent = "ゲーム開始！音符を当ててください";
             generateRandomNote();
         });
 
         function playNote(note) {
             if (!synth) return;
             synth.triggerAttackRelease(note, "8n");
-            checkAnswer(note);
-        }
-
-        function checkAnswer(note) {
-            const messageElement = document.getElementById("message");
-            if (note === correctNote) {
-                messageElement.textContent = "せいかい！つぎのおんぷへ！";
-                attempts++;
-                if (attempts >= maxAttempts) {
-                    endGame();
-                } else {
-                    setTimeout(generateRandomNote, 1000);
-                }
-            } else {
-                messageElement.textContent = "まちがい！もういちど！";
-                mistakes++;
-            }
-        }
-
-        function generateRandomNote() {
-            const notes = ["c/4", "d/4", "e/4", "f/4", "g/4", "a/4", "b/4", "c/5"];
-            const noteNames = ["C4", "D4", "E4", "F4", "G4", "A4", "B4", "C5"];
-            let index = Math.floor(Math.random() * notes.length);
-            correctNote = noteNames[index];
-            drawStaff(notes[index]);
+            checkAnswer(note); // 音を鳴らしてから正誤判定！
+            console.log("チェックアンサー実行")
         }
 
         function drawStaff(note) {
             const staffDiv = document.getElementById("staff");
             staffDiv.innerHTML = "";
-
             const renderer = new Vex.Flow.Renderer(staffDiv, Vex.Flow.Renderer.Backends.SVG);
+            renderer.resize(600, 200);
             const context = renderer.getContext();
-
             const stave = new Vex.Flow.Stave(50, 40, 500);
             stave.addClef("treble").setContext(context).draw();
-
-            const notes = [
-                new Vex.Flow.StaveNote({ keys: [note], duration: "q" })
-            ];
-
+            const staveNote = new Vex.Flow.StaveNote({
+                keys: [note],
+                duration: "q",
+                clef: "treble"
+            });
             const voice = new Vex.Flow.Voice({ num_beats: 1, beat_value: 4 });
-            voice.addTickables(notes);
+            voice.addTickables([staveNote]);
             new Vex.Flow.Formatter().joinVoices([voice]).format([voice], 400);
             voice.draw(context, stave);
         }
 
-        function endGame() {
-            const score = 100 - mistakes;
-            document.getElementById("message").textContent = `おわり！てんすうは ${score} てんです。`;
+        function generateRandomNote() {
+            const notes = ["C4", "D4", "E4", "F4", "G4", "A4", "B4", "C5"];
+            let index = Math.floor(Math.random() * notes.length);
+            correctNote = notes[index];
+            // VexFlow の形式に変換（C4 → C/4）
+            let vexflowNote = correctNote.charAt(0) + "/" + correctNote.charAt(1);
+            console.log("Generated note:", correctNote, "VexFlow note:", vexflowNote);
+            drawStaff(vexflowNote);
+            // playNote(correctNote);
+            startTime = Date.now();
         }
 
+        function checkAnswer(selectedNote) {
+            let responseTime = (Date.now() - startTime) / 1000;
+            if (selectedNote === correctNote) {
+//                let points = responseTime <= 2.0 ? fastBonus : baseScore;
+
+                let points;
+                if (responseTime <= 2.0) {
+                    points = fastBonus; // 2秒以内ならボーナス点を適用
+                    document.getElementById("message").textContent = `はやい！せいかい！+${points}てん`;
+                } else {
+                    points = baseScore; // 2秒以上なら通常の点数
+                    document.getElementById("message").textContent = `せいかい！+${points}てん`;
+                }
+                console.log("responseTime " , responseTime)
+                score += points;
+                responseTimes.push({ note: correctNote, time: responseTime });
+                //document.getElementById("message").textContent = `せいかい！+${points}てん`;
+                attempts++;
+                if (attempts >= maxAttempts) endGame();
+                else setTimeout(generateRandomNote, 1000);
+            } else {
+                score += penalty;
+                mistakes++;
+                mistakeCount[selectedNote] = (mistakeCount[selectedNote] || 0) + 1;
+                document.getElementById("message").textContent = `もういちど！${penalty}てん`;
+            }
+            // attempts++;
+            // if (attempts >= maxAttempts) endGame();
+            // else etTimeosut(generateRandomNote, 1000);
+        }
+
+        function endGame() {
+    let totalTime = responseTimes.reduce((sum, r) => sum + r.time, 0);
+    let avgTime = totalTime / responseTimes.length || 0;
+
+    responseTimes.sort((a, b) => a.time - b.time);
+    let fastest = responseTimes.slice(0, 3);
+    let slowest = responseTimes.slice(-3);
+
+    let mistakesSorted = Object.entries(mistakeCount)
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 3);
+
+    let resultMessage = `
+        🎵 ゲーム終了 🎵
+        - かかった時間: ${totalTime.toFixed(2)} 秒
+        - 正解の数: ${responseTimes.length}
+        - 間違えた数: ${mistakes}
+        - 平均の反応時間: ${avgTime.toFixed(2)} 秒
+        - 反応が早かった音トップ3: ${fastest.map(n => `${n.note}(${n.time.toFixed(2)}秒)`).join(", ")}
+        - 反応が遅かった音トップ3: ${slowest.map(n => `${n.note}(${n.time.toFixed(2)}秒)`).join(", ")}
+        - 間違いの多かった音トップ3: ${mistakesSorted.map(m => `${m[0]}(${m[1]}回)`).join(", ")}
+    `;
+
+    alert(resultMessage);
+}
+
+
         document.querySelectorAll('.key').forEach(key => {
-            key.addEventListener('mousedown', () => playNote(key.dataset.note));
+            key.addEventListener('mousedown', () => {
+                const note = key.dataset.note;
+                playNote(note);
+            });
             key.addEventListener('touchstart', (event) => {
                 event.preventDefault();
-                playNote(key.dataset.note);
+                const note = event.target.dataset.note;
+                playNote(note);
             });
         });
     </script>
