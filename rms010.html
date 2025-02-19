@@ -133,7 +133,7 @@
             generateRandomNote();
         });
 
-        function playNote(note) {
+        async function playNote(note) {
             console.log('playNote start!')
             // AudioContext が一時停止していたら再開
             if (Tone.context.state !== "running") {
