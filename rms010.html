@@ -134,13 +134,25 @@
         });
 
         function playNote(note) {
-            console.log("playNote start!")
+            console.log('playNote start!')
+            // AudioContext が一時停止していたら再開
+            if (Tone.context.state !== "running") {
+                console.warn("AudioContext is suspended, restarting...");
+                await Tone.start();
+                console.log("AudioContext restarted");
+            }
             if (!synth) {
                 console.error("synth is not initialized");
                 return;
             } 
             console.log("playing note:" , note)
-            synth.triggerAttackRelease(note, "8n");
+            try {
+                synth.triggerAttackRelease(note, "8n");
+                console.log("note played:",  note)
+            } catch (error){
+                console.error("Error playing note:", error);
+            }
+            // synth.triggerAttackRelease(note, "8n");
             checkAnswer(note); // 音を鳴らしてから正誤判定！
             console.log("チェックアンサー実行")
         }
