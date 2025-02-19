@@ -189,8 +189,13 @@
                 responseTimes.push({ note: correctNote, time: responseTime });
                 //document.getElementById("message").textContent = `せいかい！+${points}てん`;
                 attempts++;
-                if (attempts >= maxAttempts) endGame();
-                else setTimeout(generateRandomNote, 1000);
+                if (attempts >= maxAttempts) {
+                    endGame();　
+                }else {
+                    setTimeout(generateRandomNote, 1000);
+                    console.log('settimeout 実行');
+                }
+                
             } else {
                 score += penalty;
                 mistakes++;
@@ -216,6 +221,7 @@
 
     let resultMessage = `
         🎵 ゲーム終了 🎵
+        - 合計得点: ${score}
         - かかった時間: ${totalTime.toFixed(2)} 秒
         - 正解の数: ${responseTimes.length}
         - 間違えた数: ${mistakes}
@@ -235,7 +241,7 @@
                 playNote(note);
             });
             key.addEventListener('touchstart', (event) => {
-                // event.preventDefault();
+                event.preventDefault();
                 const note = event.target.dataset.note;
                 playNote(note);
             });
