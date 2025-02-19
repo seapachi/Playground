@@ -143,7 +143,8 @@
             const renderer = new Vex.Flow.Renderer(staffDiv, Vex.Flow.Renderer.Backends.SVG);
             renderer.resize(600, 200);
             const context = renderer.getContext();
-            const stave = new Vex.Flow.Stave(50, 40, 500);
+            // const stave = new Vex.Flow.Stave(50, 40, 600);
+            const stave = new Vex.Flow.Stave(50, 40, 300);            
             stave.addClef("treble").setContext(context).draw();
             const staveNote = new Vex.Flow.StaveNote({
                 keys: [note],
