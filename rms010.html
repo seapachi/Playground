@@ -134,7 +134,11 @@
         });
 
         function playNote(note) {
-            if (!synth) return;
+            if (!synth) {
+                console.error("synth is not initialized");
+                return;
+            } 
+            console.log("playing note:" , note)
             synth.triggerAttackRelease(note, "8n");
             checkAnswer(note); // 音を鳴らしてから正誤判定！
             console.log("チェックアンサー実行")
@@ -243,7 +247,7 @@
             key.addEventListener('touchstart', (event) => {
                 
                 event.preventDefault();
-                const note = event.currentTarget.dataset.note;
+                const note = event.target.dataset.note;
                 console.log('const note by touch' , note)
                 playNote(note);
                 console.log('playnote by touch',  note)
