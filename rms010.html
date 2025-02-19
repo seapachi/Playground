@@ -241,8 +241,9 @@
                 playNote(note);
             });
             key.addEventListener('touchstart', (event) => {
+                
                 event.preventDefault();
-                const note = event.target.dataset.note;
+                const note = event.currentTarget.dataset.note;
                 console.log('const note by touch' , note)
                 playNote(note);
                 console.log('playnote by touch',  note)
