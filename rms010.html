@@ -42,7 +42,7 @@
             display: flex;
             justify-content: center;
             margin: 20px;
-            background-color: blue;
+            /* background-color: blue; */
         }
         .message {
             text-align: center;
@@ -52,7 +52,7 @@
         #staff {
             width: 300px;
             height: 200px;
-            background-color: gray;
+            /* background-color: gray; */
             justify-content: center;
         }
         .reward-image {
@@ -64,6 +64,41 @@
             width: 300px;
             height: 300px;
         }
+        /* 統計情報を表示するスタイル */
+        .result-container {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(255, 255, 255, 0.9);
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.2);
+            text-align: center;
+            width: 80%;
+            max-width: 400px;
+            z-index: 10;  /* 黒鍵より前面に */
+        }
+
+        .result-content {
+            font-size: 1.2em;
+        }
+
+        .result-container button {
+            margin-top: 10px;
+            padding: 10px;
+            border: none;
+            background: #007BFF;
+            color: white;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .result-container button:hover {
+            background: #0056b3;
+        }
+
     </style>
 </head>
 <body>
@@ -71,6 +106,15 @@
     <h2>音符当て</h2>
     <button id="startGameButton">スタート</button>
     <button id="startAudioButton" disabled>音を有効化</button>
+    <!-- 統計情報を表示するエリアを追加 -->
+    <div id="resultContainer" class="result-container" style="display: none;">
+        <div class="result-content">
+            <!-- <h2>🎵 ゲーム終了 🎵</h2> -->
+            <p id="resultText"></p>
+            <button onclick="restartGame()">もう一度プレイ</button>
+        </div>
+    </div>
+
     <div class="staff-container">
         <div id="staff"></div>
     </div>
@@ -225,31 +269,34 @@
         }
 
         function endGame() {
-    let totalTime = responseTimes.reduce((sum, r) => sum + r.time, 0);
-    let avgTime = totalTime / responseTimes.length || 0;
+            let totalTime = responseTimes.reduce((sum, r) => sum + r.time, 0);
+            let avgTime = totalTime / responseTimes.length || 0;
 
-    responseTimes.sort((a, b) => a.time - b.time);
-    let fastest = responseTimes.slice(0, 3);
-    let slowest = responseTimes.slice(-3);
+            responseTimes.sort((a, b) => a.time - b.time);
+            let fastest = responseTimes.slice(0, 3);
+            let slowest = responseTimes.slice(-3);
 
-    let mistakesSorted = Object.entries(mistakeCount)
-        .sort((a, b) => b[1] - a[1])
-        .slice(0, 3);
+            let mistakesSorted = Object.entries(mistakeCount)
+                .sort((a, b) => b[1] - a[1])
+                .slice(0, 3);
 
-    let resultMessage = `
-        🎵 ゲーム終了 🎵
-        - 合計得点: ${score}
-        - かかった時間: ${totalTime.toFixed(2)} 秒
-        - 正解の数: ${responseTimes.length}
-        - 間違えた数: ${mistakes}
-        - 平均の反応時間: ${avgTime.toFixed(2)} 秒
-        - 反応が早かった音トップ3: ${fastest.map(n => `${n.note}(${n.time.toFixed(2)}秒)`).join(", ")}
-        - 反応が遅かった音トップ3: ${slowest.map(n => `${n.note}(${n.time.toFixed(2)}秒)`).join(", ")}
-        - 間違いの多かった音トップ3: ${mistakesSorted.map(m => `${m[0]}(${m[1]}回)`).join(", ")}
-    `;
+            let resultMessage = `
+                <p>🎵 ゲーム終了 🎵</p>
+                <p><strong>合計得点:</strong> ${score}</p>
+                <p><strong>かかった時間:</strong> ${totalTime.toFixed(2)} 秒</p>
+                <p><strong>正解の数:</strong> ${responseTimes.length}</p>
+                <p><strong>間違えた数:</strong> ${mistakes}</p>
+                <p><strong>平均の反応時間:</strong> ${avgTime.toFixed(2)} 秒</p>
+                <p><strong>反応が早かった音トップ3:</strong> ${fastest.map(n => `${n.note}(${n.time.toFixed(2)}秒)`).join(", ")}</p>
+                <p><strong>反応が遅かった音トップ3:</strong> ${slowest.map(n => `${n.note}(${n.time.toFixed(2)}秒)`).join(", ")}</p>
+                <p><strong>間違いの多かった音トップ3:</strong> ${mistakesSorted.map(m => `${m[0]}(${m[1]}回)`).join(", ")}</p>
+            `;
 
-    alert(resultMessage);
-}
+            // alert(resultMessage);
+            // 結果を画面中央に表示
+            document.getElementById("resultText").innerHTML = resultMessage;
+            document.getElementById("resultContainer").style.display = "block";
+        }
 
 
         document.querySelectorAll('.key').forEach(key => {
