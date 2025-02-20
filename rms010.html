@@ -313,6 +313,14 @@
                 console.log('playnote by touch',  note)
             });
         });
+        function restartGame() {
+            console.log("Restarting game"); // デバッグ用ログ
+            document.getElementById("resultContainer").style.display = "none"; // 統計情報を非表示
+            document.getElementById("message").textContent = ""; // メッセージをクリア
+            resetGame(); // ゲームの状態をリセット
+            generateRandomNote(); // 新しい問題を出題
+        }
+
     </script>
 
     <!-- デバッグ用 -->
