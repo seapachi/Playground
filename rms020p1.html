@@ -10,7 +10,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700&display=swap" rel="stylesheet">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/vexflow/1.2.93/vexflow-min.js"></script>
-  <style>
+   <style>
 /* 全体コンテナの設定 */
 .container {
   width: 350px;
@@ -36,7 +36,7 @@ body {
   background: linear-gradient(135deg, #f5f7fa, #c3cfe2);
   color: #333;
   text-align: center;
-  padding: 10px 0 0 0 ;
+  padding: 10px 0 0 0;
 }
 h2 {
   margin-bottom: 20px;
@@ -219,6 +219,7 @@ button:hover:not(:disabled) {
 </div>
   
   <script>
+
     let synth;
     let correctNote;
     let attempts = 0;
@@ -280,9 +281,14 @@ button:hover:not(:disabled) {
       const renderer = new Vex.Flow.Renderer(staffDiv, Vex.Flow.Renderer.Backends.SVG);
       renderer.resize(300, 200);
       const context = renderer.getContext();
+      // ここでSVG全体を1.3倍にスケールする ^^^
+      context.svg.style.transform = "scale(1.3, 1.3)";
+      context.svg.style.transformOrigin = "0 0";
+      
       // ト音記号のみ　
       // オクターブ追加　
-      const stave = new Vex.Flow.Stave(25, 40, 250);
+      // const stave = new Vex.Flow.Stave(25, 40, 250);
+      const stave = new Vex.Flow.Stave(25, 40, 190);
       stave.addClef("treble").setContext(context).draw();
       const staveNote = new Vex.Flow.StaveNote({
         keys: [note],
