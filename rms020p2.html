@@ -11,10 +11,9 @@
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700&display=swap" rel="stylesheet">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.min.js"></script>
   <!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/vexflow/1.2.93/vexflow-min.js"></script> -->
-  <!-- <script src="https://cdn.jsdelivr.net/npm/vexflow@4.2.2/build/cjs/vexflow.js"></script> -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/vexflow/3.0.9/vexflow-min.js"></script>
-
-  <style>
+  <script src="https://cdn.jsdelivr.net/npm/vexflow@4.2.2/build/cjs/vexflow.js"></script>
+  <!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/vexflow/3.0.9/vexflow-min.js"></script> -->
+<style>
     /* 全体コンテナの設定 */
     .container {
       width: 350px;
@@ -215,7 +214,7 @@
     <h2>音符当てゲーム</h2>
 
     <!-- 1つのボタンでスタート＆音を有効化 -->
-    <button id="startButton">ゲーム開始</button>
+    <button id="startButton">スタート（音が出るよ）</button>
 
     <!-- ゲームを途中終了できるボタン。最初は非表示 -->
     <button id="endGameButton" style="display:none;">ゲーム終了</button>
@@ -225,9 +224,9 @@
       <div class="result-content">
         <p id="resultText"></p>
         <!-- ゲームをリスタートするボタン -->
-        <button onclick="restartGame()">もう一度プレイ</button>
+        <button id="restartButton" onclick="restartGame()">もう一度プレイ</button>
         <!-- 復習モードボタンを追加 -->
-        <button id="reviewButton" onclick="startReviewMode()">復習モード</button>
+        <button id="reviewButton" onclick="startReviewMode()">パワーアップ！（復習）</button>
         <!-- ゲームを終了するボタン -->
         <button onclick="exitGame()">終了</button>
       </div>
@@ -355,50 +354,37 @@
         voice.addTickables([staveNote]);
         new Vex.Flow.Formatter().joinVoices([voice]).format([voice], 400);
         voice.draw(context, stave);
-      } else {
-        // 復習モード：1拍内に1つの和音として、左側に常に青色の参考音（C/4 と C/5）、
-        // 右側に問題の音符を表示する
-        // キー配列：最初2つが参考音、3つ目が問題の音
-        // 自分で書いてみる
-        
-        //　ドの音２つ
-        const chordKeys = ["c/4", "c/5","c/6"];
-        const staveNote = new Vex.Flow.StaveNote({
-          keys: chordKeys,
-          duration: "q",  
-          clef: "treble"
-        });
-        // ノートの stem を消す
-        staveNote.setStemStyle({ strokeStyle: "transparent" });
-
-        // staveNote.setKeyStyle( 0,{ fillStyle: "blue", strokeStyle: "blue" });
-        // staveNote.setKeyStyle( 1,{ fillStyle: "blue", strokeStyle: "blue" });
-        [0, 1,2].forEach(i => staveNote.setKeyStyle(i, { fillStyle: "blue", strokeStyle: "blue" }));
-
-
-        const voice = new Vex.Flow.Voice({ num_beats: 1, beat_value: 4 });
-        voice.addTickables([staveNote]);
-        new Vex.Flow.Formatter().joinVoices([voice]).format([voice], 400);  
-        voice.draw(context, stave);
-
-        //　問題の音
-        // chordKeys = [note];
-        staveNote2 = new Vex.Flow.StaveNote({
-          keys: [note],
-          duration: "q",
-          clef: "treble"
-        });
-        // ノートの stem を消す
-        staveNote2.setStemStyle({ strokeStyle: "transparent" });
-        const voice2 = new Vex.Flow.Voice({ num_beats: 1, beat_value: 4 });
-        voice2.addTickables([staveNote2]);
-        new Vex.Flow.Formatter().joinVoices([voice2]).format([voice2], 400);
-        voice2.draw(context, stave);
-        console.log("context ",context)
-        console.log("stave ",stave)
-        // 復習モードの場合、採点は行わず正解数をカウントする処理は checkAnswer() 側で対応
-      }
       document.getElementById("message").textContent = `わかるかな？`;
+      } else {
+        // 復習モード：1拍内に1つの和音として、左側に常に青色の参考音（C/4 と C/5　C/6）、
+    // ① 参考用ノート
+    const refNote = new Vex.Flow.StaveNote({
+      keys: ["c/4", "c/5" ,"c/6"],
+      // keys: chordKeys,
+      duration: "q",
+      clef: "treble",
+    });
+    refNote.setStyle({ fillStyle: "blue", strokeStyle: "blue" });
+    refNote.setStemStyle({ strokeStyle: "transparent" });
+      const probNote = new Vex.Flow.StaveNote({
+        keys: [note],
+        duration: "q",
+        clef: "treble"
+        // stem_direction: 0
+      });
+      probNote.setStemStyle({ strokeStyle: "transparent" });
+    const voice1 = new Vex.Flow.Voice({ num_beats: 2, beat_value: 4 });
+    voice1.addTickables([refNote,probNote]);
+
+
+    new Vex.Flow.Formatter().joinVoices([voice1]).format([voice1], 50);
+    voice1.draw(context, stave);
+    document.getElementById("message").textContent = `わかるかな？ヒント：青色は"ド"だよ`;
+
+  }
+        // 復習モードの場合、採点は行わず正解数をカウントする処理は checkAnswer() 側で対応
+
+      // document.getElementById("message").textContent = `わかるかな？`;
     }
 
     function generateRandomNote() {
@@ -485,10 +471,11 @@
     function finishReviewMode() {
       reviewMode = false;
       let reviewResultMessage = `
-        <p>復習モード 終了</p>
-        <p>正解数：${reviewCorrectCount} / ${maxReviewQuestions}</p>
+        <p>よくできました！</p>
       `;
+      // <p>正解数：${reviewCorrectCount} / ${maxReviewQuestions}</p>
       document.getElementById("resultText").innerHTML = reviewResultMessage;
+      document.getElementById("restartButton").style.display = "inline-block";
       document.getElementById("resultContainer").style.display = "block";
     }
 
@@ -529,10 +516,11 @@
         if (selectedNote === correctNote) {
           reviewCorrectCount++;
           document.getElementById("message").textContent = `正解！`;
+          reviewIndex++;
         } else {
           document.getElementById("message").textContent = `不正解！`;
         }
-        reviewIndex++;
+        // reviewIndex++;
         setTimeout(generateRandomNote, 1000);
       }
     }
@@ -565,6 +553,7 @@
         </p>
       `;
       document.getElementById("resultText").innerHTML = resultMessage;
+      document.getElementById("restartButton").style.display = "none"; //^^^
       document.getElementById("resultContainer").style.display = "block";
       // 終了ボタンを非表示
       document.getElementById("endGameButton").style.display = "none";
