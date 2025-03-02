@@ -398,6 +398,7 @@
         // 復習モード：reviewQuestions 配列から出題
         if (reviewIndex < reviewQuestions.length) {
           correctNote = reviewQuestions[reviewIndex];
+          console.log("reviewCorrectNote=",correctNote) //^^^debug
         } else {
           finishReviewMode();
           return;
@@ -411,6 +412,8 @@
       // 鍵盤のオクターブは、ランダム出題の場合、
       // もしランダム音がC4～B4なら "4"、C5～B5なら "5" に固定
       let keyboardOctave = (parseInt(octave) < 5) ? "4" : "5";
+      console.log("octave",octave); // ^^^debug
+      console.log("keyboardOctave",keyboardOctave);   // ^^^debug
 
       // 更新：鍵盤の音を表示する（鍵盤はドからシ＋黒鍵も含む）
       // 1〜7番目が白鍵, 8〜12番目が黒鍵
@@ -454,6 +457,7 @@
       Object.keys(mistakeCount).forEach(note => reviewPoolSet.add(note));
       responseTimes.forEach(rtObj => reviewPoolSet.add(rtObj.note));
       reviewQuestions = Array.from(reviewPoolSet);
+      console.log("reviewQuestions=",reviewQuestions) ;  //^^^ debug
       // もしプールが maxReviewQuestions より多ければシャッフルして選択
       if (reviewQuestions.length > maxReviewQuestions) {
         reviewQuestions = shuffleArray(reviewQuestions).slice(0, maxReviewQuestions);
