@@ -294,6 +294,8 @@
       await Tone.start(); // AudioContextを有効化
       alert("音が有効になりました！");
       synth = new Tone.Synth().toDestination();
+      // 5秒待つ
+      await new Promise(resolve => setTimeout(resolve, 5000));
       await demoMode();
       resetGame();
       document.getElementById("message").textContent = "ゲーム開始！音符を当ててね";
