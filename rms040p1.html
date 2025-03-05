@@ -331,7 +331,9 @@
         try {
           synth.triggerAttackRelease(note, "8n");
           // 音の長さ（8n）分待ってからresolveする
-          setTimeout(resolve, Tone.Time('8n').toMilliseconds());
+          // setTimeout(resolve, Tone.Time('8n').toMilliseconds());
+          setTimeout(resolve, 500);
+          
           // setTimeout(resolve, 300);
         } catch (error) {
           console.error("Error playing note:",note, error);
