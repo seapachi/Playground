@@ -295,7 +295,7 @@
       alert("音が有効になりました！");
       synth = new Tone.Synth().toDestination();
       // 5秒待つ
-      await new Promise(resolve => setTimeout(resolve, 5000));
+      await new Promise(resolve => setTimeout(resolve, 3000));
       await demoMode();
       resetGame();
       document.getElementById("message").textContent = "ゲーム開始！音符を当ててね";
@@ -333,8 +333,8 @@
         try {
           synth.triggerAttackRelease(note, "8n");
           // 音の長さ（8n）分待ってからresolveする
-          // setTimeout(resolve, Tone.Time('8n').toMilliseconds());
-          setTimeout(resolve, 500);
+          setTimeout(resolve, Tone.Time('8n').toMilliseconds());
+          // setTimeout(resolve, 500);
           
           // setTimeout(resolve, 300);
         } catch (error) {
