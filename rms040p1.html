@@ -334,7 +334,7 @@
           setTimeout(resolve, Tone.Time('8n').toMilliseconds());
         } catch (error) {
           console.error("Error playing note:", error);
-          resolve(); // エラーの場合でもresolveする
+          // resolve(); // エラーの場合でもresolveする
         }
       });
     }
@@ -638,7 +638,7 @@
             // playNoteの完了を待つ
             await playNote(note);
 
-            // 0.5秒待機
+            // 0.2秒待機
             await new Promise(resolve => setTimeout(resolve, 200));
 
             // ハイライトを元に戻す
