@@ -301,6 +301,7 @@
       await demoMode();
       resetGame();
       document.getElementById("message").textContent = "ゲーム開始！音符を当ててね";
+      await new Promise(resolve => setTimeout(resolve, 1000));
       generateRandomNote();
 
       // ゲーム開始したら、スタートボタンを隠し、終了ボタンを表示
