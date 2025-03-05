@@ -334,7 +334,7 @@
           setTimeout(resolve, Tone.Time('8n').toMilliseconds());
           // setTimeout(resolve, 300);
         } catch (error) {
-          console.error("Error playing note:", error);
+          console.error("Error playing note:",note, error);
           resolve();
           // setTimeout(resolve,300); // エラーの場合でもresolveする
         }
