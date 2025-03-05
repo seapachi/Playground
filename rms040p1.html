@@ -1,6 +1,6 @@
 <!-- ト音記号のみ　 -->
 <!-- オクターブ追加　 -->
-<!-- ヘ音記号（test8）　2oct c2-b3　 -->
+<!-- ヘ音記号（test8）　2oct c2-b3　 デモモード追加 -->
 <!DOCTYPE html>
 <html lang="ja">
 
@@ -293,7 +293,7 @@
     document.getElementById("startButton").addEventListener("click", async () => {
       await Tone.start(); // AudioContextを有効化
       alert("音が有効になりました！");
-
+      await demoMode();
       resetGame();
       synth = new Tone.Synth().toDestination();
       document.getElementById("message").textContent = "ゲーム開始！音符を当ててください";
@@ -308,6 +308,8 @@
     document.getElementById("endGameButton").addEventListener("click", () => {
       endGame(); // 途中終了でも結果を表示
     });
+
+
 
     function resetGame() {
       attempts = 0;
@@ -589,6 +591,78 @@ function generateRandomNote() {
         playNote(note);
       });
     });
+
+    async function demoMode() {
+      // デモモード中は他の操作を無効化
+      document.getElementById("startButton").disabled = true;
+      document.getElementById("endGameButton").disabled = true;
+
+      // 音符の配列（C2からB3まで順番に）
+      const demoNotes = [
+        "C2", "D2", "E2", "F2", "G2", "A2", "B2",
+        "C3", "D3", "E3", "F3", "G3", "A3", "B3"
+      ];
+
+      // 各音符を順番に再生
+      for (let note of demoNotes) {
+        // 音符を表示
+        let letter = note.charAt(0);
+        let octave = note.slice(1);
+        drawStaff(letter + "/" + octave);
+
+        // 鍵盤のオクターブを更新
+        updateKeyboardOctave(octave);
+
+        // 対応する鍵盤をハイライト
+        const key = document.querySelector(`.key[data-note="${note}"]`);
+        if (key) {
+          key.style.backgroundColor = '#e0e0e0';
+        }
+
+        // 音を鳴らす
+        if (synth) {
+          synth.triggerAttackRelease(note, "8n");
+        }
+
+        // 0.5秒待機
+        await new Promise(resolve => setTimeout(resolve, 500));
+
+        // ハイライトを元に戻す
+        if (key) {
+          key.style.backgroundColor = key.classList.contains('black') ? '#333' : 'white';
+        }
+      }
+
+      // デモ終了後、ボタンを再度有効化
+      document.getElementById("startButton").disabled = false;
+      document.getElementById("endGameButton").disabled = false;
+    }
+
+    // 鍵盤のオクターブを更新する関数
+    function updateKeyboardOctave(octave) {
+      const naturalKeys = ["C", "D", "E", "F", "G", "A", "B"];
+      const sharpKeys = ["C#", "D#", "F#", "G#", "A#"];
+
+      // 白鍵更新
+      const whiteKeys = document.querySelectorAll('.piano .key:not(.black)');
+      whiteKeys.forEach((key, idx) => {
+        let noteLetter = naturalKeys[idx];
+        if (idx === 0) {
+          key.dataset.note = "C" + octave;
+          key.textContent = "C" + octave;
+        } else {
+          key.dataset.note = noteLetter + octave;
+          key.textContent = "";
+        }
+      });
+
+      // 黒鍵更新
+      const blackKeys = document.querySelectorAll('.piano .key.black');
+      blackKeys.forEach((key, idx) => {
+        key.dataset.note = sharpKeys[idx] + octave;
+        key.textContent = "";
+      });
+    }
   </script>
   <!-- デバッグ用 -->
   <script src="https://unpkg.com/vconsole@latest/dist/vconsole.min.js"></script>
