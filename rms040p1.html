@@ -320,17 +320,23 @@
       document.getElementById("rewardImage").style.display = "none";
     }
 
+    // まずplayNote関数をPromiseを返すように修正
     async function playNote(note) {
       if (Tone.context.state !== "running") {
         await Tone.start();
       }
       if (!synth) return;
-      try {
-        synth.triggerAttackRelease(note, "8n");
-      } catch (error) {
-        console.error("Error playing note:", error);
-      }
-      // checkAnswer(note);
+      
+      return new Promise(resolve => {
+        try {
+          synth.triggerAttackRelease(note, "8n");
+          // 音の長さ（8n）分待ってからresolveする
+          setTimeout(resolve, Tone.Time('8n').toMilliseconds());
+        } catch (error) {
+          console.error("Error playing note:", error);
+          resolve(); // エラーの場合でもresolveする
+        }
+      });
     }
 
     function drawStaff(note, isDemoMode = false) {
@@ -629,16 +635,11 @@
               key.style.backgroundColor = '#e0e0e0';
             }
 
-            // 音を鳴らす
-            playNote(note);
-
-            // console.log("synth",synth);
-            // if (synth) {
-            //   synth.triggerAttackRelease(note, "8n");
-            // }
+            // playNoteの完了を待つ
+            await playNote(note);
 
             // 0.5秒待機
-            await new Promise(resolve => setTimeout(resolve, 500));
+            await new Promise(resolve => setTimeout(resolve, 200));
 
             // ハイライトを元に戻す
             if (key) {
