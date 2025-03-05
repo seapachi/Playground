@@ -293,9 +293,9 @@
     document.getElementById("startButton").addEventListener("click", async () => {
       await Tone.start(); // AudioContextを有効化
       alert("音が有効になりました！");
+      synth = new Tone.Synth().toDestination();
       await demoMode();
       resetGame();
-      synth = new Tone.Synth().toDestination();
       document.getElementById("message").textContent = "ゲーム開始！音符を当ててください";
       generateRandomNote();
 
@@ -603,11 +603,13 @@ function generateRandomNote() {
         "C3", "D3", "E3", "F3", "G3", "A3", "B3"
       ];
 
+      document.getElementById("message").textContent = "このおんぷがでてくるよ";
       // 各音符を順番に再生
       for (let note of demoNotes) {
         // 音符を表示
         let letter = note.charAt(0);
         let octave = note.slice(1);
+        reviewMode = true;
         drawStaff(letter + "/" + octave);
 
         // 鍵盤のオクターブを更新
@@ -634,6 +636,8 @@ function generateRandomNote() {
       }
 
       // デモ終了後、ボタンを再度有効化
+      reviewMode = false;
+      document.getElementById("message").textContent = "";
       document.getElementById("startButton").disabled = false;
       document.getElementById("endGameButton").disabled = false;
     }
