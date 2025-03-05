@@ -331,11 +331,12 @@
         try {
           synth.triggerAttackRelease(note, "8n");
           // 音の長さ（8n）分待ってからresolveする
-          // setTimeout(resolve, Tone.Time('8n').toMilliseconds());
-          setTimeout(resolve, 300);
+          setTimeout(resolve, Tone.Time('8n').toMilliseconds());
+          // setTimeout(resolve, 300);
         } catch (error) {
           console.error("Error playing note:", error);
-          setTimeout(resolve,300); // エラーの場合でもresolveする
+          resolve();
+          // setTimeout(resolve,300); // エラーの場合でもresolveする
         }
       });
     }
@@ -640,7 +641,7 @@
             await playNote(note);
 
             // 0.2秒待機
-            // await new Promise(resolve => setTimeout(resolve, 200));
+            await new Promise(resolve => setTimeout(resolve, 200));
 
             // ハイライトを元に戻す
             if (key) {
