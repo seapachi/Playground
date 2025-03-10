@@ -14,6 +14,14 @@
   <script src="https://cdn.jsdelivr.net/npm/vexflow@4.2.2/build/cjs/vexflow.js"></script>
 <style>
     /* 全体コンテナの設定 */
+    .header {
+    display: flex;          /* 横並びにする */
+    align-items: center;    /* 縦方向の中央揃え */
+    justify-content: space-between; /* 余白を均等配置 */
+    gap: 10px;              /* アイテム間の間隔 */
+    /* font-size: 1.5em; */
+    }
+
     .container {
       width: 350px;
       height: 640px;
@@ -32,7 +40,12 @@
       /* 360px に収まるように余白をとる */
       height: 180px;
       margin: 0 auto;
-    }
+      background: #f8f9fa;
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 20px;
+      text-align: center;
+      }
 
     /* リセットと基本スタイル */
     * {
@@ -43,8 +56,8 @@
 
     body {
       font-family: 'Noto Sans JP', sans-serif;
-      background: linear-gradient(135deg, #f5f7fa, #c3cfe2);
-      /* background: linear-gradient(135deg, #f0e8ff, #d9caff); */
+      /* background: linear-gradient(135deg, #f5f7fa, #c3cfe2); */
+      background: linear-gradient(135deg, #f0e8ff, #d9caff);
       color: #333;
       text-align: center;
       padding: 10px 0 0 0;
@@ -56,11 +69,13 @@
     }
 
     button {
-      padding: 10px 20px;
+      padding: 5px 5px;
       margin: 10px;
       border: none;
+      /* height: 3em; */
       border-radius: 5px;
-      background-color: #007BFF;
+      /* background-color: #007BFF; */
+      background-color: #a855f7;
       color: white;
       font-size: 1em;
       cursor: pointer;
@@ -73,7 +88,8 @@
     }
 
     button:hover:not(:disabled) {
-      background-color: #0056b3;
+      /* background-color: #0056b3; */
+      background-color:  #9333ea;
       transform: translateY(-2px);
     }
 
@@ -223,16 +239,14 @@
 
 <body>  
   <div class="container">
-    <h2>Guess Notes &#119136;</h2>
-    <!-- <h2>Guess Notes 𝅘𝅥𝅮</h2> -->
-
-
-    <!-- 1つのボタンでスタート＆音を有効化 -->
-    <button id="startButton">スタート（音が出るよ）</button>
-
-    <!-- ゲームを途中終了できるボタン。最初は非表示 -->
-    <button id="endGameButton" style="display:none;">ゲーム終了</button>
-
+    <!-- <h2>Guess Notes</h2> -->
+     <div class="header">
+        <div style="font-size:1.5em;">Guess Notes</div>
+        <!-- 1つのボタンでスタート＆音を有効化 -->
+        <button id="startButton" style="height: 3em; ">Start Play<br>(Sound On)</button>
+        <!-- ゲームを途中終了できるボタン。最初は非表示 -->
+        <button id="endGameButton" style="display:none; height: 3em;">End Play</button>
+     </div>
     <!-- 統計情報を表示するエリア -->
     <div id="resultContainer" class="result-container">
       <div class="result-content">
@@ -247,6 +261,7 @@
     </div>
 
     <div class="staff-container">
+      
       <div id="staff"></div>
     </div>
     <div class="message" id="message">スタートボタンを押してね</div>
@@ -359,12 +374,19 @@
       const staffDiv = document.getElementById("staff");
       staffDiv.innerHTML = "";
       const renderer = new Vex.Flow.Renderer(staffDiv, Vex.Flow.Renderer.Backends.SVG);
-      renderer.resize(300, 200);
+
+
+      // renderer.resize(300, 200);
+      renderer.resize(260, 140);
       const context = renderer.getContext();
       context.svg.style.transform = "scale(1.3, 1.3)";
       context.svg.style.transformOrigin = "0 0";
 
-      const stave = new Vex.Flow.Stave(25, 40, 190);
+      // const stave = new Vex.Flow.Stave(25, 40, 190);
+      // Create a stave of width 190 at position 0, 0 on the canvas.
+      const stave = new Vex.Flow.Stave(0, 0, 190);
+      // stave.setSpacingBetweenLines(40); // デフォルトは 10, 倍率を大きくすると広くなる
+      // stave.setHeight(200);  // 高さを200pxに
       stave.addClef("bass").setContext(context).draw();
 
       if (isDemoMode || reviewMode) {
@@ -455,7 +477,8 @@
             key.dataset.note = sharpKeys[idx] + keyboardOctave;
             key.textContent = ""; // 黒鍵は文字を表示しない
           });
-          document.getElementById("message").textContent = `わかるかな？`; 
+          document.getElementById("message").textContent = `わかるかな？`;
+          // Vex.Flow.Stave.DEFAULT_LINE_SPACING = 40; //default 20  
           drawStaff(letter + "/" + octave);
           startTime = Date.now();
         }
@@ -640,6 +663,7 @@
             let letter = note.charAt(0);
             let octave = note.slice(1);
             // reviewMode = true;
+            // Vex.Flow.Stave.DEFAULT_LINE_SPACING = 40; //default 20  
             drawStaff(letter + "/" + octave, true);
 
             // 鍵盤のオクターブを更新
