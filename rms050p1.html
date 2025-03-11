@@ -27,14 +27,16 @@
       width:300px;
       align-items: center;    /* 縦方向の中央揃え */
       font-size: 1.2em;
-      font-weight: bold;
-      color: #a855f7;
-      margin: 10px 0;
-      padding: 5px 10px;
-      background-color: #f8f9fa;
-      border-radius: 8px;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-      text-align: center;
+      /* font-weight: bold; */
+      /* color: #a855f7; */
+      margin: 10  10;
+      padding: 0;
+      /* background-color: #f8f9fa; */
+      /* background-color: blue; */
+      /* border-radius: 12px; */
+      margin: bottom 5px;
+      /* box-shadow: 0 2px 4px rgba(0,0,0,0.1); */
+      text-align: right;
     }
 
     .container {
@@ -56,6 +58,7 @@
       height: 180px;
       margin: 0 auto;
       background: #f8f9fa;
+      /* background: blue; */
       border-radius: 12px;
       padding: 20px;
       margin-bottom: 20px;
@@ -245,11 +248,11 @@
     .reward-image {
       display: none;
       position: absolute;
-      top: 50%;
-      left: 50%;
+      top: 40%;
+      left: 70%;
       transform: translate(-50%, -50%);
-      width: 300px;
-      height: 300px;
+      width: 200px;
+      height: 200px;
       border-radius: 50%;
       box-shadow: 0 0 15px rgba(0, 0, 0, 0.3);
     }
@@ -269,7 +272,8 @@
      </div>
      
      <!-- スコア表示エリア -->
-     <div id="scoreDisplay" class="score-display">スコア: 0</div>
+     <div id="scoreDisplay" class="score-display">0コンボ　0てん</div>
+     <div id="scoreDisplay" class="score-display"></div>
      
     <!-- 統計情報を表示するエリア -->
     <div id="resultContainer" class="result-container">
@@ -327,6 +331,7 @@
     let attempts = 0;
     let mistakes = 0;
     let score = 0;
+    let combo = 0;  // コンボ数を追加
     let responseTimes = [];
     let mistakeCount = {};
     let startTime;
@@ -334,6 +339,14 @@
     const baseScore = 10;
     const fastBonus = 20;
     const penalty = -10;
+    const comboBonus = 30;  // コンボボーナスを追加
+
+    // 報酬画像の配列を追加
+    const rewardImages = [
+      "png/10_dance.png",
+      "png/20_dance.png",
+      "png/30_dance.png"
+    ];
 
     // スタートボタンをクリックしたら音有効化＋ゲーム開始
     document.getElementById("startButton").addEventListener("click", async () => {
@@ -366,10 +379,11 @@
       attempts = 0;
       mistakes = 0;
       score = 0;
+      combo = 0;  // コンボもリセット
       responseTimes = [];
       mistakeCount = {};
-      document.getElementById("rewardImage").style.display = "none";
-      updateScoreDisplay(); // スコア表示を更新
+      document.getElementById("rewardImage").style.display = "none";  // 画像を非表示
+      updateScoreDisplay();
     }
 
     // まずplayNote関数をPromiseを返すように修正
@@ -421,7 +435,8 @@
           duration: "q",
           clef: "bass"
         });
-        refNote.setStyle({ fillStyle: "blue", strokeStyle: "blue" });
+        // refNote.setStyle({ fillStyle: "blue", strokeStyle: "blue" });
+        refNote.setStyle({ fillStyle: "#a855f7", strokeStyle: "#a855f7" });
         refNote.setStemStyle({ strokeStyle: "transparent" });
         const probNote = new Vex.Flow.StaveNote({
           keys: [note],
@@ -562,10 +577,33 @@
             // 通常モード
             if (selectedNote === correctNote) {
               let points = responseTime <= 2.0 ? fastBonus : baseScore;
-              document.getElementById("message").textContent =
-                responseTime <= 2.0 ? `はやい！せいかい！+${points}てん` : `せいかい！+${points}てん`;
+              combo++;  // コンボ数を増やす
+              
+              // 3の倍数のコンボでボーナスと画像表示
+              if (combo % 3 === 0) {
+                // ボーナスは一旦なし
+                // points += comboBonus;
+                // document.getElementById("message").textContent =
+                //   `${combo}コンボ！ボーナス ${comboBonus}てん！`;
+                
+                // 3回連続正解時に画像を表示
+                const rewardImage = document.getElementById("rewardImage");
+                // ランダムで画像を選択
+                const randomIndex = Math.floor(Math.random() * rewardImages.length);
+                rewardImage.src = rewardImages[randomIndex];
+                rewardImage.style.display = "block";
+                
+                // 0.5秒後に画像を非表示
+                setTimeout(() => {
+                  rewardImage.style.display = "none";
+                }, 500);
+              } else {
+                document.getElementById("message").textContent =
+                  responseTime <= 2.0 ? `はやい！せいかい！+${points}てん` : `せいかい！+${points}てん`;
+              }
+              
               score += points;
-              updateScoreDisplay(); // スコア表示を更新
+              updateScoreDisplay();
               responseTimes.push({ note: correctNote, time: responseTime });
               attempts++;
               if (attempts >= maxAttempts) {
@@ -575,7 +613,8 @@
               }
             } else {
               score += penalty;
-              updateScoreDisplay(); // スコア表示を更新
+              combo = 0;  // コンボをリセット
+              updateScoreDisplay();
               mistakes++;
               // mistakeCount[selectedNote] = (mistakeCount[selectedNote] || 0) + 1;
               mistakeCount[correctNote] = (mistakeCount[correctNote] || 0) + 1;
@@ -629,7 +668,7 @@
             </p>
           `;
           document.getElementById("resultText").innerHTML = resultMessage;
-          document.getElementById("restartButton").style.display = "none"; //^^^
+          document.getElementById("restartButton").style.display = "none";
           document.getElementById("resultContainer").style.display = "block";
           // 終了ボタンを非表示
           document.getElementById("endGameButton").style.display = "none";
@@ -784,7 +823,7 @@
 
         // スコア表示を更新する関数
         function updateScoreDisplay() {
-          document.getElementById("scoreDisplay").textContent = `スコア: ${score}`;
+          document.getElementById("scoreDisplay").textContent = `${combo}コンボ　${score}てん`;
         }
   </script>
   <!-- デバッグ用 -->
