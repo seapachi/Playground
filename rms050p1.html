@@ -22,6 +22,21 @@
     /* font-size: 1.5em; */
     }
 
+    /* スコア表示用のスタイル */
+    .score-display {
+      width:300px;
+      align-items: center;    /* 縦方向の中央揃え */
+      font-size: 1.2em;
+      font-weight: bold;
+      color: #a855f7;
+      margin: 10px 0;
+      padding: 5px 10px;
+      background-color: #f8f9fa;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      text-align: center;
+    }
+
     .container {
       width: 350px;
       height: 640px;
@@ -97,8 +112,12 @@
     .piano {
       position: relative;
       width: 300px;
-      height: 120px;
+      height: 140px;
       margin: 10px auto;
+      padding: 10px;  /* ピアノの外側に余白を設定   */
+      background: #f8f9fa;
+      border-radius: 12px;
+
     }
 
     /* 白鍵 */
@@ -126,7 +145,7 @@
       border: 1px solid #444;
       border-radius: 4px;
       position: absolute;
-      top: 0;
+      top: -10;
       z-index: 2;
       cursor: pointer;
       user-select: none;
@@ -136,27 +155,27 @@
     /* 黒鍵の配置：HTML末尾にまとめてある場合は「8番目〜12番目」が黒鍵 */
     .piano .key:nth-child(8) {
       /* 1番目の黒鍵 (C#) */
-      left: 28px;
+      left: 38px;
     }
 
     .piano .key:nth-child(9) {
       /* 2番目の黒鍵 (D#) */
-      left: 68px;
+      left: 78px;
     }
 
     .piano .key:nth-child(10) {
       /* 3番目の黒鍵 (F#) */
-      left: 148px;
+      left: 158px;
     }
 
     .piano .key:nth-child(11) {
       /* 4番目の黒鍵 (G#) */
-      left: 188px;
+      left: 198px;
     }
 
     .piano .key:nth-child(12) {
       /* 5番目の黒鍵 (A#) */
-      left: 228px;
+      left: 238px;
     }
 
     /* キーが押されたときのスタイル */
@@ -241,12 +260,17 @@
   <div class="container">
     <!-- <h2>Guess Notes</h2> -->
      <div class="header">
-        <div style="font-size:1.5em;">Guess Notes</div>
-        <!-- 1つのボタンでスタート＆音を有効化 -->
-        <button id="startButton" style="height: 3em; ">Start Play<br>(Sound On)</button>
+        <!-- <div style="font-size:1.5em;">Guess Notes</div> -->
+        <div style="font-size:1.5em;">おんぷクイズ</div>
+        <!-- 1つのボタンでスター＆音を有効化 -->
+        <button id="startButton" style="height: 3em; ">スタート<br><div style="font-size:0.8em;">（おとがでるよ）</div></button>
         <!-- ゲームを途中終了できるボタン。最初は非表示 -->
-        <button id="endGameButton" style="display:none; height: 3em;">End Play</button>
+        <button id="endGameButton" style="display:none; height: 3em;">しゅうりょう</button>
      </div>
+     
+     <!-- スコア表示エリア -->
+     <div id="scoreDisplay" class="score-display">スコア: 0</div>
+     
     <!-- 統計情報を表示するエリア -->
     <div id="resultContainer" class="result-container">
       <div class="result-content">
@@ -345,6 +369,7 @@
       responseTimes = [];
       mistakeCount = {};
       document.getElementById("rewardImage").style.display = "none";
+      updateScoreDisplay(); // スコア表示を更新
     }
 
     // まずplayNote関数をPromiseを返すように修正
@@ -540,6 +565,7 @@
               document.getElementById("message").textContent =
                 responseTime <= 2.0 ? `はやい！せいかい！+${points}てん` : `せいかい！+${points}てん`;
               score += points;
+              updateScoreDisplay(); // スコア表示を更新
               responseTimes.push({ note: correctNote, time: responseTime });
               attempts++;
               if (attempts >= maxAttempts) {
@@ -549,6 +575,7 @@
               }
             } else {
               score += penalty;
+              updateScoreDisplay(); // スコア表示を更新
               mistakes++;
               // mistakeCount[selectedNote] = (mistakeCount[selectedNote] || 0) + 1;
               mistakeCount[correctNote] = (mistakeCount[correctNote] || 0) + 1;
@@ -753,6 +780,11 @@
             const octave = note.charAt(2);       // オクターブ番号
             return `${noteNames[noteName]}（${octave}つめ）`;
           }
+        }
+
+        // スコア表示を更新する関数
+        function updateScoreDisplay() {
+          document.getElementById("scoreDisplay").textContent = `スコア: ${score}`;
         }
   </script>
   <!-- デバッグ用 -->
