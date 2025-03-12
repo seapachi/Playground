@@ -4,20 +4,447 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Pのちょうせんじょう</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Helvetica Neue', Arial, sans-serif;
+        }
+
+        body {
+            overflow-x: hidden;
+            color: white;
+            background-color: #000;
+            position: relative;
+            height: 100vh;
+            width: 100vw;
+        }
+
+        #video-background {
+            position: fixed;
+            top: 0;
+            left: 0;
+            min-width: 100%;
+            min-height: 100%;
+            width: auto;
+            height: auto;
+            z-index: -2;
+            object-fit: cover;
+            opacity: 0.8;
+        }
+
+        #overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.4);
+            z-index: -1;
+        }
+
+        .star {
+            position: absolute;
+            background-color: #fff;
+            border-radius: 50%;
+            z-index: 1;
+            animation: twinkle 4s infinite ease-in-out;
+            pointer-events: none;
+        }
+
+        @keyframes twinkle {
+            0%, 100% { opacity: 0.2; transform: scale(0.8); }
+            50% { opacity: 1; transform: scale(1.2); }
+        }
+
+        .content {
+            position: relative;
+            z-index: 2;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            padding: 20px;
+        }
+
+        h1 {
+            font-size: 3.5rem;
+            margin-bottom: 10px;
+            text-shadow: 0 0 10px rgba(102, 204, 255, 0.8);
+            animation: glow 3s infinite alternate;
+        }
+
+        @keyframes glow {
+            0% { text-shadow: 0 0 10px rgba(102, 204, 255, 0.8); }
+            100% { text-shadow: 0 0 20px rgba(102, 204, 255, 1), 0 0 30px rgba(102, 204, 255, 0.8), 0 0 40px rgba(102, 204, 255, 0.6); }
+        }
+
+        h2 {
+            font-size: 1.8rem;
+            margin-bottom: 50px;
+            color: #f5c542;
+            text-shadow: 0 0 5px rgba(245, 197, 66, 0.8);
+        }
+
+        .link-container {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 20px;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .content-link {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            width: 120px;
+            height: 120px;
+            background: rgba(23, 42, 136, 0.6);
+            border-radius: 15px;
+            text-decoration: none;
+            color: white;
+            font-size: 1.2rem;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            border: 2px solid rgba(102, 204, 255, 0.5);
+            box-shadow: 0 0 15px rgba(102, 204, 255, 0.3);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .content-link:hover, .content-link:active {
+            transform: scale(1.05);
+            background: rgba(37, 64, 187, 0.8);
+            box-shadow: 0 0 20px rgba(102, 204, 255, 0.8);
+        }
+
+        .content-link::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: linear-gradient(to bottom right, transparent, transparent, transparent, rgba(255, 255, 255, 0.3), transparent, transparent, transparent);
+            transform: rotate(45deg);
+            animation: shine 3s infinite;
+        }
+
+        @keyframes shine {
+            0% { transform: translateX(-100%) translateY(-100%) rotate(45deg); }
+            100% { transform: translateX(100%) translateY(100%) rotate(45deg); }
+        }
+
+        /* スマホやタブレット向け最適化 */
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 2.5rem;
+            }
+
+            h2 {
+                font-size: 1.4rem;
+                margin-bottom: 30px;
+            }
+
+            .link-container {
+                gap: 15px;
+            }
+
+            .content-link {
+                width: 100px;
+                height: 100px;
+                font-size: 1rem;
+            }
+        }
+
+        /* 小さいスマホ向け */
+        @media (max-width: 480px) {
+            h1 {
+                font-size: 2rem;
+            }
+
+            h2 {
+                font-size: 1.2rem;
+            }
+
+            .link-container {
+                gap: 10px;
+            }
+
+            .content-link {
+                width: 80px;
+                height: 80px;
+                font-size: 0.9rem;
+            }
+        }
+
+        #tap-area {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+        }
+
+        /* 惑星のアニメーション */
+        .planet {
+            position: absolute;
+            border-radius: 50%;
+            box-shadow: 0 0 20px rgba(255, 255, 255, 0.5);
+            z-index: 0;
+            animation: orbit 30s linear infinite;
+        }
+
+        @keyframes orbit {
+            0% { transform: rotate(0deg) translateX(100px) rotate(0deg); }
+            100% { transform: rotate(360deg) translateX(100px) rotate(-360deg); }
+        }
+
+        /* 宇宙飛行士のアニメーション */
+        .astronaut {
+            position: absolute;
+            width: 40px;
+            height: 40px;
+            background: url('/api/placeholder/40/40'); /* プレイスホルダー画像 */
+            z-index: 2;
+            animation: float 15s ease-in-out infinite;
+            opacity: 0;
+        }
+
+        @keyframes float {
+            0% { transform: translateX(-100px) translateY(30vh) rotate(10deg); opacity: 0; }
+            10% { opacity: 1; }
+            90% { opacity: 1; }
+            100% { transform: translateX(calc(100vw + 100px)) translateY(40vh) rotate(-10deg); opacity: 0; }
+        }
+
+        /* ロケットのアニメーション */
+        .rocket {
+            position: absolute;
+            width: 30px;
+            height: 60px;
+            background: linear-gradient(to bottom, #ff0000, #ff5500);
+            border-radius: 50% 50% 0 0;
+            z-index: 2;
+            animation: launch 8s ease-in infinite;
+            opacity: 0;
+        }
+
+        .rocket::after {
+            content: '';
+            position: absolute;
+            bottom: -20px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 20px;
+            height: 30px;
+            background: linear-gradient(to bottom, rgba(255, 165, 0, 0.8), transparent);
+            border-radius: 50%;
+        }
+
+        @keyframes launch {
+            0% { transform: translateX(50vw) translateY(100vh) scale(0.5); opacity: 0; }
+            10% { opacity: 1; }
+            100% { transform: translateX(50vw) translateY(-100px) scale(1); opacity: 0; }
+        }
+    </style>
 </head>
 <body>
-    <p>Pのちょうせんじょう<br></p>
-    
-        <p><a href="https://seapachi.github.io/Playground/rms010.html">ステージ1</a></p>
+    <!-- 背景動画 -->
+    <video id="video-background" autoplay loop muted playsinline>
+        <!-- 注: 実際の動画URLを指定する必要があります -->
+        <source src="https://cdn.pixabay.com/video/2023/11/28/191253-890894250_large.mp4" type="video/mp4">
+    </video>
+    <div id="overlay"></div>
+    <div id="tap-area"></div>
+
+    <!-- メインコンテンツ -->
+    <div class="content">
+        <h1>Pのちょうせんじょう</h1>
+        <h2>きみはクリアできるか</h2>
+        <div class="link-container">
+            <a href="https://seapachi.github.io/Playground/rms010.html" class="content-link">ステージ1</a>
+            <a href="https://seapachi.github.io/Playground/rms020p2.html" class="content-link">ステージ2</a>
+            <a href="https://seapachi.github.io/Playground/rms030p1.html" class="content-link">ステージ3</a>
+            <a href="https://seapachi.github.io/Playground/rms040p1.html" class="content-link">ステージ4</a>
+            <a href="https://seapachi.github.io/Playground/rms050p1.html" class="content-link">ステージ5</a>
+        </div>
+    </div>
+
+    <script>
+        // 背景動画の読み込みエラー時の代替処理
+        const videoBackground = document.getElementById('video-background');
+        videoBackground.addEventListener('error', function() {
+            console.error('動画の読み込みに失敗しました。静的な背景に切り替えます。');
+            videoBackground.style.display = 'none';
+            document.body.style.background = 'black';
+        });
+
+        // タップ/クリックで星を生成
+        const tapArea = document.getElementById('tap-area');
         
-        <p><a href="https://seapachi.github.io/Playground/rms020p2.html">ステージ2</a></p>
+        function createStarOnTap(e) {
+            // タッチイベントとクリックイベントの座標を取得
+            const x = e.touches ? e.touches[0].clientX : e.clientX;
+            const y = e.touches ? e.touches[0].clientY : e.clientY;
+            
+            // 星を8個生成
+            for (let i = 0; i < 8; i++) {
+                const star = document.createElement('div');
+                star.classList.add('star');
+                
+                // サイズをランダムに
+                const size = Math.random() * 4 + 2;
+                star.style.width = `${size}px`;
+                star.style.height = `${size}px`;
+                
+                // クリック位置の周りにランダムに配置
+                const offsetX = Math.random() * 60 - 30;
+                const offsetY = Math.random() * 60 - 30;
+                star.style.left = `${x + offsetX}px`;
+                star.style.top = `${y + offsetY}px`;
+                
+                // アニメーションを短く
+                star.style.animation = 'twinkle 2s infinite ease-in-out';
+                
+                document.body.appendChild(star);
+                
+                // 数秒後に消える
+                setTimeout(() => {
+                    star.style.opacity = '0';
+                    setTimeout(() => {
+                        star.remove();
+                    }, 1000);
+                }, 1000 + Math.random() * 1000);
+            }
+        }
 
-        <p><a href="https://seapachi.github.io/Playground/rms030p1.html">ステージ3（ヘ音記号C3-B3）</a></p>
+        // ランダムに惑星を生成
+        function createPlanet() {
+            const planet = document.createElement('div');
+            planet.classList.add('planet');
+            
+            // ランダムなサイズと位置
+            const size = Math.random() * 30 + 20;
+            planet.style.width = `${size}px`;
+            planet.style.height = `${size}px`;
+            
+            // ランダムな色
+            const colors = ['#FF5733', '#C70039', '#900C3F', '#581845', '#2471A3', '#229954', '#D4AC0D'];
+            const randomColor = colors[Math.floor(Math.random() * colors.length)];
+            planet.style.backgroundColor = randomColor;
+            
+            // ランダムな位置と回転速度
+            const randomAngle = Math.random() * 360;
+            const distance = Math.random() * 150 + 100;
+            const duration = Math.random() * 20 + 20;
+            
+            planet.style.left = '50%';
+            planet.style.top = '50%';
+            planet.style.marginLeft = `-${size / 2}px`;
+            planet.style.marginTop = `-${size / 2}px`;
+            
+            planet.style.animation = `orbit ${duration}s linear infinite`;
+            planet.style.transform = `rotate(${randomAngle}deg) translateX(${distance}px) rotate(-${randomAngle}deg)`;
+            
+            document.body.appendChild(planet);
+            
+            // 一定時間後に削除
+            setTimeout(() => {
+                planet.remove();
+            }, duration * 1000);
+        }
 
-        <p><a href="https://seapachi.github.io/Playground/rms040p1.html">ステージ4（ヘ音記号C2-B3）</a></p>
-    
-        <p><a href="https://seapachi.github.io/Playground/rms050p1.html">工事中</a></p>
+        // ロケットを生成
+        function createRocket() {
+            const rocket = document.createElement('div');
+            rocket.classList.add('rocket');
+            
+            // ランダムな位置
+            const randomX = Math.random() * 80 + 10; // 画面の10%〜90%の位置
+            rocket.style.left = `${randomX}vw`;
+            
+            document.body.appendChild(rocket);
+            
+            // アニメーション終了後に削除
+            setTimeout(() => {
+                rocket.remove();
+            }, 8000);
+        }
 
-    
+        // 宇宙飛行士を生成
+        function createAstronaut() {
+            const astronaut = document.createElement('div');
+            astronaut.classList.add('astronaut');
+            
+            document.body.appendChild(astronaut);
+            
+            // アニメーション終了後に削除
+            setTimeout(() => {
+                astronaut.remove();
+            }, 15000);
+        }
+
+        // 初期化
+        function initialize() {
+            // タッチイベントとクリックイベントの設定
+            tapArea.addEventListener('touchstart', createStarOnTap);
+            tapArea.addEventListener('click', createStarOnTap);
+            
+            // 定期的に惑星を生成
+            setInterval(createPlanet, 10000);
+            
+            // 定期的にロケットを生成
+            setInterval(createRocket, 15000);
+            
+            // 定期的に宇宙飛行士を生成
+            setInterval(createAstronaut, 20000);
+            
+            // リンクのキラキラエフェクト
+            const links = document.querySelectorAll('.content-link');
+            links.forEach(link => {
+                link.addEventListener('mouseover', () => {
+                    link.style.transform = 'scale(1.05)';
+                });
+                link.addEventListener('mouseout', () => {
+                    link.style.transform = 'scale(1)';
+                });
+            });
+        }
+        
+        // ページ読み込み時に初期化
+        window.addEventListener('load', initialize);
+
+        // 動画が読み込まれたときに処理
+        videoBackground.addEventListener('loadeddata', function() {
+            console.log('動画が読み込まれました');
+        });
+
+        // 異なるフリー宇宙動画のURLリスト（実際の使用時はこれらのURLを実際の動画URLに置き換えてください）
+        const spaceVideoUrls = [
+            'https://cdn.pixabay.com/video/2023/11/28/191253-890894250_large.mp4',  // プレースホルダー画像を使用（実際はここに動画URLを設定）
+            'https://cdn.pixabay.com/video/2023/11/29/191325-890894257_large.mp4',  // プレースホルダー画像を使用（実際はここに動画URLを設定）
+            'https://cdn.pixabay.com/video/2022/05/26/118251-714645538_large.mp4'   // プレースホルダー画像を使用（実際はここに動画URLを設定）
+        ];
+
+        // 注: 実際の実装では以下のようなフリー動画のURLを使用します
+        // 例: https://example.com/videos/space1.mp4
+
+        /**
+         * 実際のサイトで使用する場合は、以下のようなフリー動画素材サイトからダウンロードした動画を
+         * 自身のサーバーにアップロードして使用するか、CDN経由で提供されている動画URLを使用します：
+         * 
+         * - Pixabay: https://pixabay.com/ja/videos/
+         * - Pexels: https://www.pexels.com/ja-jp/videos/
+         * - Videvo: https://www.videvo.net/
+         * - Mixkit: https://mixkit.co/
+         */
+    </script>
 </body>
 </html>
