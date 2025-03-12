@@ -222,7 +222,7 @@
       left: 50%;
       transform: translate(-50%, -50%);
       background: rgba(255, 255, 255, 0.95);
-      padding: 30px;
+      padding: 20px;
       border-radius: 10px;
       box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
       text-align: center;
@@ -230,6 +230,7 @@
       max-width: 320px;
       z-index: 100;
       animation: fadeIn 0.5s;
+      font-size:1em
     }
 
     @keyframes fadeIn {
@@ -315,7 +316,8 @@
         <!-- ゲームをリスタートするボタン -->
         <button id="restartButton" onclick="restartGame()">もう一度プレイ</button>
         <!-- 復習モードボタンを追加 -->
-        <button id="reviewButton" onclick="startReviewMode()">パワーアップ！（復習）</button>
+        <!-- <button id="reviewButton"  onclick="startReviewMode()">パワーアップ！<br><div style="font-size:0.8em;">（復習）</div></button> -->
+        <button id="reviewButton"  onclick="startReviewMode()">パワーアップ！（復習）</button>
         <!-- ゲームを終了するボタン -->
         <button onclick="exitGame()">終了</button>
       </div>
@@ -708,21 +710,20 @@
 
           let resultMessage = `
             <p>🎵 ゲーム終了 🎵</p>
-            <p><strong>ごうけい:</strong> ${score}</p>
-            <p><strong>かかった時間:</strong> ${totalTime.toFixed(2)} 秒</p>
-            <p><strong>◯の数:</strong> ${responseTimes.length}</p>
-            <p><strong>×の数:</strong> ${mistakes}</p>
+            <p><strong>ごうけい:</strong> ${score}てん</p>
+            <p><strong>◯の音:</strong> ${responseTimes.length}こ、
+               <strong>×の音:</strong> ${mistakes}こ</p>
             <p><strong>平均の反応時間:</strong> ${avgTime.toFixed(2)} 秒</p>
-            <p><strong>反応が早かった音トップ3:</strong> </p><p>
-              ${fastest.map(n => `${convertNoteToJapanese(n.note)}(${n.time.toFixed(2)}秒)`).join(",")}
+            <p><strong>はやかった音トップ3:</strong> </p><p>
+              ${fastest.map(n => `${convertNoteToJapanese(n.note)}`).join("<br>")}
             </p>
             <p><strong>おそかった音トップ3:</strong> </p><p>
-              ${slowest.map(n => `${convertNoteToJapanese(n.note)}(${n.time.toFixed(2)}秒)`).join(",")}
+              ${slowest.map(n => `${convertNoteToJapanese(n.note)}`).join("<br>")}
             </p>
             <p><strong>まちがえた音トップ3:</strong> </p><p>
-              ${mistakesSorted.map(m => `${convertNoteToJapanese(m[0])}(${m[1]}回)`).join(",")}
-            </p>
-            <p><strong>おそかった音、まちがえた音をふくしゅうしよう！</strong>
+              ${mistakesSorted.map(m => `${convertNoteToJapanese(m[0])}(${m[1]}回)`).join("<br>")}
+            </p><br>
+            <p style="color:#9333ea;"><strong>おそかった音、まちがえた音を<br>ふくしゅうしよう！</strong>
             </p>
           `;
           document.getElementById("resultText").innerHTML = resultMessage;
@@ -777,7 +778,7 @@
           // 音符の配列（C2からB3まで順番に）
           const demoNotes = [
             "C2", "D2", "E2", "F2", "G2", "A2", "B2",
-            "C3", "D3", "E3", "F3", "G3", "A3", "B3",
+            "C3", "D3", "E3", "F3", "G3", "A3", "B3","C2"
           ];
 
           // document.getElementById("message").textContent = "このおんぷがでてくるよ";
