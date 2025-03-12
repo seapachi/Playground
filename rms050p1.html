@@ -256,6 +256,39 @@
       border-radius: 50%;
       box-shadow: 0 0 15px rgba(0, 0, 0, 0.3);
     }
+
+    /* 表示時のアニメーション */
+    .reward-image.show {
+      display: block;
+      animation: slideUpFade 0.5s ease-out;
+    }
+
+    /* 非表示時のアニメーション */
+    .reward-image.hide {
+      animation: fadeOut 0.5s ease-out forwards;
+    }
+
+    /* スライドアップ＆フェードインのアニメーション */
+    @keyframes slideUpFade {
+      from {
+        opacity: 0;
+        transform: translate(-50%, 0%);
+      }
+      to {
+        opacity: 1;
+        transform: translate(-50%, -50%);
+      }
+    }
+
+    /* フェードアウトのアニメーション */
+    @keyframes fadeOut {
+      from {
+        opacity: 1;
+      }
+      to {
+        opacity: 0;
+      }
+    }
   </style>
 </head>
 
@@ -347,6 +380,20 @@
       "png/20_dance.png",
       "png/30_dance.png"
     ];
+
+    // 画像をプリロードする関数
+    function preloadImages() {
+      const preloadedImages = [];
+      rewardImages.forEach(src => {
+        const img = new Image();
+        img.src = src;
+        preloadedImages.push(img);
+      });
+      return preloadedImages;
+    }
+
+    // ページ読み込み時に画像をプリロード
+    const preloadedImages = preloadImages();
 
     // スタートボタンをクリックしたら音有効化＋ゲーム開始
     document.getElementById("startButton").addEventListener("click", async () => {
@@ -583,20 +630,29 @@
               if (combo % 3 === 0) {
                 // ボーナスは一旦なし
                 // points += comboBonus;
-                // document.getElementById("message").textContent =
-                //   `${combo}コンボ！ボーナス ${comboBonus}てん！`;
+                document.getElementById("message").textContent =
+                  // `${combo}コンボ！ボーナス ${comboBonus}てん！`;
+                  `${combo}コンボ！`;
                 
                 // 3回連続正解時に画像を表示
                 const rewardImage = document.getElementById("rewardImage");
-                // ランダムで画像を選択
-                const randomIndex = Math.floor(Math.random() * rewardImages.length);
-                rewardImage.src = rewardImages[randomIndex];
+                const randomIndex = Math.floor(Math.random() * preloadedImages.length);
+                // プリロードした画像のsrcを使用
+                rewardImage.src = preloadedImages[randomIndex].src;
                 rewardImage.style.display = "block";
+                rewardImage.classList.add("show");
+                rewardImage.classList.remove("hide");
                 
-                // 0.5秒後に画像を非表示
+                // フェードアウトのアニメーション
                 setTimeout(() => {
-                  rewardImage.style.display = "none";
-                }, 500);
+                  rewardImage.classList.remove("show");
+                  rewardImage.classList.add("hide");
+                  // アニメーション完了後に非表示
+                  rewardImage.addEventListener("animationend", () => {
+                    rewardImage.style.display = "none";
+                    rewardImage.classList.remove("hide");
+                  }, { once: true });
+                }, 1000);
               } else {
                 document.getElementById("message").textContent =
                   responseTime <= 2.0 ? `はやい！せいかい！+${points}てん` : `せいかい！+${points}てん`;
