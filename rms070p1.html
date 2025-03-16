@@ -1,0 +1,1193 @@
+<!-- v13  ステージセレクト -->
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Guess A Note</title>
+  <!-- Google Fonts を追加 -->
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700&display=swap" rel="stylesheet">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/vexflow@4.2.2/build/cjs/vexflow.js"></script>
+<style>
+    /* 全体コンテナの設定 */
+    .header {
+    display: flex;          /* 横並びにする */
+    align-items: center;    /* 縦方向の中央揃え */
+    justify-content: space-between; /* 余白を均等配置 */
+    gap: 10px;              /* アイテム間の間隔 */
+    /* font-size: 1.5em; */
+    }
+
+    /* スコア表示用のスタイル */
+    .score-display {
+      width:300px;
+      align-items: center;    /* 縦方向の中央揃え */
+      font-size: 1.2em;
+      /* font-weight: bold; */
+      /* color: #a855f7; */
+      margin: 10  10;
+      padding: 0;
+      /* background-color: #f8f9fa; */
+      /* background-color: blue; */
+      /* border-radius: 12px; */
+      margin: bottom 5px;
+      /* box-shadow: 0 2px 4px rgba(0,0,0,0.1); */
+      text-align: right;
+    }
+
+    .container {
+      width: 350px;
+      height: 640px;
+      margin: 0 auto;
+      padding: 20px;
+      overflow: hidden;
+      position: relative;
+      border-radius: 16px;
+      background: white;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.1)
+    }
+
+    /* ヘッダーやボタンなどはそのままでもよいが、必要に応じてフォントサイズやマージンも調整 */
+    .staff-container #staff {
+      width: 300px;
+      /* 360px に収まるように余白をとる */
+      height: 180px;
+      margin: 0 auto;
+      background: #f8f9fa;
+      /* background: blue; */
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 20px;
+      text-align: center;
+      }
+
+    /* リセットと基本スタイル */
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Noto Sans JP', sans-serif;
+      /* background: linear-gradient(135deg, #f5f7fa, #c3cfe2); */
+      background: linear-gradient(135deg, #f0e8ff, #d9caff);
+      color: #333;
+      text-align: center;
+      padding: 10px 0 0 0;
+    }
+
+    h2 {
+      margin-bottom: 20px;
+      font-weight: 600;
+    }
+
+    button {
+      padding: 5px 5px;
+      margin: 10px;
+      border: none;
+      /* height: 3em; */
+      border-radius: 5px;
+      /* background-color: #007BFF; */
+      background-color: #a855f7;
+      color: white;
+      font-size: 1em;
+      cursor: pointer;
+      transition: background-color 0.3s, transform 0.2s;
+    }
+
+    button:disabled {
+      background-color: #aaa;
+      cursor: not-allowed;
+    }
+
+    button:hover:not(:disabled) {
+      /* background-color: #0056b3; */
+      background-color:  #9333ea;
+      transform: translateY(-2px);
+    }
+
+    /* ピアノスタイル */
+    .piano {
+      position: relative;
+      width: 300px;
+      height: 140px;
+      margin: 10px auto;
+      padding: 10px;  /* ピアノの外側に余白を設定   */
+      background: #f8f9fa;
+      border-radius: 12px;
+
+    }
+
+    /* 白鍵 */
+    .piano .key:not(.black) {
+      width: 40px;
+      height: 120px;
+      border: 1px solid #999;
+      background-color: white;
+      border-radius: 4px;
+      float: left;
+      position: relative;
+      line-height: 120px;
+      font-size: 1em;
+      cursor: pointer;
+      user-select: none;
+      transition: background-color 0.2s, box-shadow 0.2s;
+      z-index: 1;
+    }
+
+    /* 黒鍵 */
+    .piano .key.black {
+      width: 28px;
+      height: 80px;
+      background-color: #333;
+      border: 1px solid #444;
+      border-radius: 4px;
+      position: absolute;
+      top: -10;
+      z-index: 2;
+      cursor: pointer;
+      user-select: none;
+      transition: background-color 0.2s, box-shadow 0.2s;
+    }
+
+    /* 黒鍵の配置：HTML末尾にまとめてある場合は「8番目〜12番目」が黒鍵 */
+    .piano .key:nth-child(8) {
+      /* 1番目の黒鍵 (C#) */
+      left: 38px;
+    }
+
+    .piano .key:nth-child(9) {
+      /* 2番目の黒鍵 (D#) */
+      left: 78px;
+    }
+
+    .piano .key:nth-child(10) {
+      /* 3番目の黒鍵 (F#) */
+      left: 158px;
+    }
+
+    .piano .key:nth-child(11) {
+      /* 4番目の黒鍵 (G#) */
+      left: 198px;
+    }
+
+    .piano .key:nth-child(12) {
+      /* 5番目の黒鍵 (A#) */
+      left: 238px;
+    }
+
+    /* キーが押されたときのスタイル */
+    .piano .key:active {
+      background-color: #e0e0e0;
+      box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.3);
+    }
+
+    .piano .key.black:active {
+      background-color: #555;
+    }
+
+    /* 楽譜表示領域 */
+    .staff-container #staff {
+      display: flex;
+      justify-content: center;
+      width: 300px;
+      height: 180px;
+      margin: 0 auto;
+    }
+
+    /* メッセージ */
+    .message {
+      font-size: 1.5em;
+      margin: 20px;
+      height: 3em; /* 固定の高さを設定 */
+      display: flex; /* フレックスボックスを使用 */
+      align-items: center; /* 垂直方向の中央揃え */
+      justify-content: center; /* 水平方向の中央揃え */
+      word-wrap: break-word; /* 長い単語を折り返す */
+      overflow-wrap: break-word; /* 長い単語を折り返す（新しい仕様） */
+      white-space: normal; /* テキストを折り返す */
+      width: 80%; /* 幅を親要素いっぱいに */
+    }
+
+    /* 統計情報モーダル */
+    .result-container {
+      display: none;
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: rgba(255, 255, 255, 0.95);
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+      text-align: center;
+      width: 90%;
+      max-width: 320px;
+      z-index: 100;
+      animation: fadeIn 0.5s;
+      font-size:1em
+    }
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translate(-50%, -60%);
+      }
+
+      to {
+        opacity: 1;
+        transform: translate(-50%, -50%);
+      }
+    }
+
+    /* 報酬画像 */
+    .reward-image {
+      display: none;
+      position: absolute;
+      top: 40%;
+      left: 70%;
+      transform: translate(-50%, -50%);
+      width: 200px;
+      height: 200px;
+      border-radius: 50%;
+      box-shadow: 0 0 15px rgba(0, 0, 0, 0.3);
+    }
+
+    /* 表示時のアニメーション */
+    .reward-image.show {
+      display: block;
+      animation: slideUpFade 0.5s ease-out;
+    }
+
+    /* 非表示時のアニメーション */
+    .reward-image.hide {
+      animation: fadeOut 0.5s ease-out forwards;
+    }
+
+    /* スライドアップ＆フェードインのアニメーション */
+    @keyframes slideUpFade {
+      from {
+        opacity: 0;
+        transform: translate(-50%, 0%);
+      }
+      to {
+        opacity: 1;
+        transform: translate(-50%, -50%);
+      }
+    }
+
+    /* フェードアウトのアニメーション */
+    @keyframes fadeOut {
+      from {
+        opacity: 1;
+      }
+      to {
+        opacity: 0;
+      }
+    }
+
+    /* モード選択画面のスタイル */
+    .mode-select, .stage-select {
+      text-align: center;
+      padding: 20px;
+    }
+
+    .mode-select button, .stage-select button {
+      width: 200px;
+      margin: 10px;
+      padding: 15px;
+      font-size: 1.1em;
+    }
+
+    .stage-buttons {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 10px;
+      margin: 20px 0;
+    }
+
+    .stage-buttons button {
+      width: 100%;
+      height: 80px;
+    }
+  </style>
+</head>
+
+<body>  
+  <div class="container">
+    <div class="header">
+      <div style="font-size:1.4em;">🎵おんぷクイズ</div>
+      <button id="startButton" style="height: 3em; display: none;">スタート<br><div style="font-size:0.8em;">（おとがでるよ）</div></button>
+      <button id="endGameButton" style="display:none; height: 3em;">しゅうりょう</button>
+    </div>
+    
+    <!-- モード選択画面 -->
+    <div id="modeSelect" class="mode-select">
+      <h2>モードを選んでね</h2>
+      <button id="adventureModeBtn">アドベンチャーモード</button>
+      <button id="stageSelectBtn">ステージセレクト</button>
+    </div>
+
+    <!-- ステージ選択画面 -->
+    <div id="stageSelect" class="stage-select" style="display: none;">
+      <h2>ステージを選んでね</h2>
+      <div class="stage-buttons">
+        <button id="stage1Btn">ステージ1<br>（ド4〜シ4）</button>
+        <button id="stage2Btn">ステージ2<br>（ド4〜シ5）</button>
+        <button id="stage3Btn">ステージ3<br>（ド3〜シ3）</button>
+        <button id="stage4Btn">ステージ4<br>（ド2〜シ3）</button>
+        <button id="stage5Btn">ステージ5<br>（ド2〜シ4）</button>
+        <button id="stage6Btn">ステージ6<br>（ド2〜シ5）</button>
+      </div>
+      <button id="backToModeBtn">もどる</button>
+    </div>
+
+    <!-- ゲーム画面の要素 -->
+    <div id="gameElements" style="display: none;">
+      <div id="scoreDisplay" class="score-display">0コンボ　0てん</div>
+      <div class="staff-container">
+        <div id="staff"></div>
+      </div>
+      <div class="message" id="message"></div>
+      <img id="rewardImage" class="reward-image" src="https://via.placeholder.com/300" alt="Reward">
+      <div class="piano">
+        <!-- 白鍵 (1〜7番目) -->
+        <div class="key" data-note="C2">C2</div>
+        <div class="key" data-note="D2"></div>
+        <div class="key" data-note="E2"></div>
+        <div class="key" data-note="F2"></div>
+        <div class="key" data-note="G2"></div>
+        <div class="key" data-note="A2"></div>
+        <div class="key" data-note="B2"></div>
+        <!-- 黒鍵 (8〜12番目) -->
+        <div class="key black" data-note="C#2"></div>
+        <div class="key black" data-note="D#2"></div>
+        <div class="key black" data-note="F#2"></div>
+        <div class="key black" data-note="G#2"></div>
+        <div class="key black" data-note="A#2"></div>
+      </div>
+    </div>
+
+    <!-- 結果表示 -->
+    <div id="resultContainer" class="result-container">
+      <div class="result-content">
+        <p id="resultText"></p>
+        <!-- ゲームをリスタートするボタン -->
+        <button id="restartButton" onclick="restartGame()">もう一度プレイ</button>
+        <!-- 復習モードボタンを追加 -->
+        <button id="reviewButton" onclick="startReviewMode()">パワーアップ！（復習）</button>
+        <!-- ゲームを終了するボタン -->
+        <button onclick="exitGame()">終了</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // グローバルにスタッフ生成前に DEFAULT_LINE_SPACING を設定
+    Vex.Flow.Stave.DEFAULT_LINE_SPACING = 20;
+
+    // 復習モード用のグローバル変数
+    let reviewMode = false;
+    let reviewQuestions = []; // 出題するノート（例："C4"）
+    let reviewIndex = 0;
+    let reviewCorrectCount = 0;
+    // 復習出題数（あとから変更可能）
+    const maxReviewQuestions = 3;
+
+    let maxAttempts = 20;  // デフォルト値を設定
+
+    let synth;
+    let correctNote;
+    let attempts = 0;
+    let mistakes = 0;
+    let score = 0;
+    let combo = 0;
+    let responseTimes = [];
+    let mistakeCount = {};
+    let startTime;
+    const baseScore = 10;
+    const fastBonus = 20;
+    const penalty = -10;
+    const comboBonus = 30;
+
+    // 報酬画像の配列を追加
+    const rewardImages = [
+      "png/10_dance.png",
+      "png/20_dance.png",
+      "png/30_dance.png"
+    ];
+
+    // 画像をプリロードする関数
+    function preloadImages() {
+      const preloadedImages = [];
+      rewardImages.forEach(src => {
+        const img = new Image();
+        img.src = src;
+        preloadedImages.push(img);
+      });
+      return preloadedImages;
+    }
+
+    // ページ読み込み時に画像をプリロード
+    const preloadedImages = preloadImages();
+
+    // 音階の範囲を生成する関数
+    function generateNoteRange(startNote, endNote) {
+      const notes = [];
+      const scale = ['C', 'D', 'E', 'F', 'G', 'A', 'B'];
+      
+      // 開始音と終了音のオクターブと音名を分解
+      const startOctave = parseInt(startNote.slice(-1));
+      const endOctave = parseInt(endNote.slice(-1));
+      const startIndex = scale.indexOf(startNote.charAt(0));
+      const endIndex = scale.indexOf(endNote.charAt(0));
+
+      // 各オクターブで音を生成
+      for (let octave = startOctave; octave <= endOctave; octave++) {
+        // 最初のオクターブの場合
+        if (octave === startOctave) {
+          for (let i = startIndex; i < scale.length; i++) {
+            notes.push(scale[i] + octave);
+          }
+        }
+        // 最後のオクターブの場合
+        else if (octave === endOctave) {
+          for (let i = 0; i <= endIndex; i++) {
+            notes.push(scale[i] + octave);
+          }
+        }
+        // 中間のオクターブの場合
+        else {
+          scale.forEach(note => notes.push(note + octave));
+        }
+      }
+      return notes;
+    }
+
+    // ゲームモードの定数
+    const GAME_MODES = {
+      ADVENTURE: 'adventure',
+      STAGE_SELECT: 'stage_select'
+    };
+
+    // ステージ情報の定義
+    const STAGES = {
+      1: { start: 'C4', end: 'B4', questions: 10 },
+      2: { start: 'C4', end: 'B5', questions: 10 },
+      3: { start: 'C3', end: 'B3', questions: 10 },
+      4: { start: 'C2', end: 'B3', questions: 10 },
+      5: { start: 'C2', end: 'B4', questions: 10 },
+      6: { start: 'C2', end: 'B5', questions: 20 }
+    };
+
+    // アドベンチャーモードの設定
+    const ADVENTURE_CONFIG = {
+      clearRate: 0.6,  // クリア条件（最大点数の60%）
+      maxScorePerQuestion: 20  // 1問あたりの最大点数
+    };
+
+    // ゲームの状態管理
+    let gameState = {
+      mode: null,
+      currentStage: 1,
+      stageStats: {}, // ステージごとの統計情報
+      maxScore: 0,    // 現在のステージの最大点数
+    };
+
+    // スタートボタンをクリックしたら音有効化＋ゲーム開始
+    document.getElementById("startButton").addEventListener("click", async () => {
+      document.getElementById("message").textContent = "おんぷの音をあててね";
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      generateRandomNote();
+
+      // ゲーム開始したら、スタートボタンを隠し、終了ボタンを表示
+      document.getElementById("startButton").style.display = "none";
+      document.getElementById("endGameButton").style.display = "inline-block";
+    });
+
+    // ゲーム終了ボタンをクリックで途中終了
+    document.getElementById("endGameButton").addEventListener("click", () => {
+      endGame(); // 途中終了でも結果を表示
+    });
+
+    function resetGame() {
+      attempts = 0;
+      mistakes = 0;
+      score = 0;
+      combo = 0;  // コンボもリセット
+      responseTimes = [];
+      mistakeCount = {};
+      
+      // 要素の存在チェックを追加
+      const rewardImage = document.getElementById("rewardImage");
+      if (rewardImage) {
+        rewardImage.style.display = "none";
+      }
+      
+      updateScoreDisplay();
+    }
+
+    // まずplayNote関数をPromiseを返すように修正
+    async function playNote(note) {
+      if (Tone.context.state !== "running") {
+        await Tone.start();
+      }
+      if (!synth) return;
+      
+      return new Promise(resolve => {
+        try {
+          synth.triggerAttackRelease(note, "8n");
+          // 音の長さ（8n）分待ってからresolveする
+          setTimeout(resolve, Tone.Time('8n').toMilliseconds());
+          // setTimeout(resolve, 500);
+          
+          // setTimeout(resolve, 300);
+        } catch (error) {
+          console.error("Error playing note:",note, error);
+          resolve();
+          // setTimeout(resolve,300); // エラーの場合でもresolveする
+        }
+      });
+    }
+
+    function drawStaff(note, isDemoMode = false) {
+      const staffDiv = document.getElementById("staff");
+      staffDiv.innerHTML = "";
+      const renderer = new Vex.Flow.Renderer(staffDiv, Vex.Flow.Renderer.Backends.SVG);
+
+      renderer.resize(260, 140);
+      const context = renderer.getContext();
+      context.svg.style.transform = "scale(1.3, 1.3)";
+      context.svg.style.transformOrigin = "0 0";
+
+      // 音符のオクターブを取得して音部記号を決定
+      const octave = parseInt(note.split('/')[1]);
+      const clef = octave >= 4 ? "treble" : "bass";  // C4以上はト音記号、それ以下はヘ音記号
+
+      const stave = new Vex.Flow.Stave(0, 0, 190);
+      stave.addClef(clef).setContext(context).draw();
+
+      if (isDemoMode || reviewMode) {
+        // 音部記号に応じて参考音を設定
+        const referenceNotes = clef === "treble" 
+          ? ["c/4", "c/5", "c/6"]  // ト音記号の場合
+          : ["c/2", "c/3", "c/4"]; // ヘ音記号の場合
+
+        const refNote = new Vex.Flow.StaveNote({
+          keys: referenceNotes,
+          duration: "q",
+          clef: clef
+        });
+        refNote.setStyle({ fillStyle: "#a855f7", strokeStyle: "#a855f7" });
+        refNote.setStemStyle({ strokeStyle: "transparent" });
+        const probNote = new Vex.Flow.StaveNote({
+          keys: [note],
+          duration: "q",
+          clef: clef
+        });
+        probNote.setStemStyle({ strokeStyle: "transparent" });
+        const voice1 = new Vex.Flow.Voice({ num_beats: 2, beat_value: 4 });
+        voice1.addTickables([refNote, probNote]);
+        new Vex.Flow.Formatter().joinVoices([voice1]).format([voice1], 50);
+        voice1.draw(context, stave);
+      } else {
+        // 通常モード
+        const staveNote = new Vex.Flow.StaveNote({
+          keys: [note],
+          duration: "q",
+          clef: clef
+        });
+        staveNote.setStemStyle({ strokeStyle: "transparent" });
+        const voice = new Vex.Flow.Voice({ num_beats: 1, beat_value: 4 });
+        voice.addTickables([staveNote]);
+        new Vex.Flow.Formatter().joinVoices([voice]).format([voice], 400);
+        voice.draw(context, stave);
+      }
+
+      if (isDemoMode) {
+        document.getElementById("message").textContent = `${convertNoteToJapanese(note.replace('/', ''))}`;
+      }
+    }
+
+    // グローバル変数として出題範囲を定義
+    const noteRange = {
+      start: 'C2',
+      end: 'B5'
+    };
+
+    // generateRandomNote関数を更新
+    function generateRandomNote() {
+      if (!reviewMode) {
+        // 出題範囲を変数から取得
+        const notes = generateNoteRange(noteRange.start, noteRange.end);
+        let index = Math.floor(Math.random() * notes.length);
+        correctNote = notes[index];
+      } else {
+        if (reviewIndex < reviewQuestions.length) {
+          correctNote = reviewQuestions[reviewIndex];
+          console.log("reviewCorrectNote=", correctNote);
+        } else {
+          finishReviewMode();
+          return;
+        }
+      }
+      let letter = correctNote.charAt(0);
+      let octave = correctNote.slice(1);
+      let vexflowNote = letter + "/" + octave;
+
+      let keyboardOctave = octave;
+      console.log("octave",octave); // ^^^debug
+      console.log("keyboardOctave",keyboardOctave);   // ^^^debug
+
+      // 更新：鍵盤の音を表示する（鍵盤はドからシ＋黒鍵も含む）
+      // 1〜7番目が白鍵, 8〜12番目が黒鍵
+      const naturalKeys = ["C", "D", "E", "F", "G", "A", "B"];
+      const sharpKeys = ["C#", "D#", "F#", "G#", "A#"];
+
+      // 白鍵更新（1〜7番目）
+      const whiteKeys = document.querySelectorAll('.piano .key:not(.black)');
+      whiteKeys.forEach((key, idx) => {
+        let noteLetter = naturalKeys[idx];
+        if (idx === 0) {
+          // 左端の白鍵は常にド（C）
+          key.dataset.note = "C" + keyboardOctave;
+          key.textContent = "C" + keyboardOctave;
+        } else {
+          key.dataset.note = noteLetter + keyboardOctave;
+          key.textContent = "";
+        }
+      });
+
+      // 黒鍵更新（8〜12番目）
+      const blackKeys = document.querySelectorAll('.piano .key.black');
+      blackKeys.forEach((key, idx) => {
+        key.dataset.note = sharpKeys[idx] + keyboardOctave;
+        key.textContent = ""; // 黒鍵は文字を表示しない
+      });
+      document.getElementById("message").textContent = `わかるかな？`;
+      // Vex.Flow.Stave.DEFAULT_LINE_SPACING = 40; //default 20  
+      drawStaff(letter + "/" + octave);
+      startTime = Date.now();
+    }
+
+    // 復習モード開始：結果画面の「復習モード」ボタンで呼び出す
+    function startReviewMode() {
+      // ここでは、前回のゲーム結果から「間違いの多かった音トップ3」と「反応が遅かった音トップ3」を
+      // 仮にそれぞれ reviewPool1, reviewPool2 として作成する例です。
+      // ※実際は endGame() 時に計算した結果をグローバル変数に保存するか、再計算してください。
+      let reviewPoolSet = new Set();
+      // ここでは、mistakeCount からトップ3の音と、responseTimes の遅い上位3をプールとする例
+      // 注意：responseTimes のソート結果は endGame() 内でのみ利用されるため、ここでは単純な例です。
+      // 実際には適切なロジックによりトップ3を抽出してください。
+      Object.keys(mistakeCount).forEach(note => reviewPoolSet.add(note));
+      responseTimes.forEach(rtObj => reviewPoolSet.add(rtObj.note));
+      reviewQuestions = Array.from(reviewPoolSet);
+      console.log("reviewQuestions=",reviewQuestions) ;  //^^^ debug
+      // もしプールが maxReviewQuestions より多ければシャッフルして選択
+      if (reviewQuestions.length > maxReviewQuestions) {
+        reviewQuestions = shuffleArray(reviewQuestions).slice(0, maxReviewQuestions);
+      }
+      reviewMode = true;
+      reviewIndex = 0;
+      reviewCorrectCount = 0;
+      // 結果モーダルを非表示にする
+      document.getElementById("resultContainer").style.display = "none";
+      console.log("starReviewMode & generateRandomnNote")
+      generateRandomNote();
+    }
+
+    // 復習モード終了：復習結果を表示
+    function finishReviewMode() {
+      reviewMode = false;
+      let reviewResultMessage = `
+        <p>よくできました！</p>
+      `;
+      // <p>正解数：${reviewCorrectCount} / ${maxReviewQuestions}</p>
+      document.getElementById("resultText").innerHTML = reviewResultMessage;
+      document.getElementById("restartButton").style.display = "inline-block";
+      document.getElementById("resultContainer").style.display = "block";
+    }
+
+    // 単純なシャッフル関数
+    function shuffleArray(array) {
+      let arr = array.slice();
+      for (let i = arr.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [arr[i], arr[j]] = [arr[j], arr[i]];
+      }
+      return arr;
+    }
+
+    function checkAnswer(selectedNote) {
+      let responseTime = (Date.now() - startTime) / 1000;
+      if (!reviewMode) {
+        // 通常モード
+        if (selectedNote === correctNote) {
+          let points = responseTime <= 2.0 ? fastBonus : baseScore;
+          combo++;  // コンボ数を増やす
+          
+          // 3の倍数のコンボでボーナスと画像表示
+          if (combo % 3 === 0) {
+            // ボーナスは一旦なし
+            // points += comboBonus;
+            document.getElementById("message").textContent =
+              // `${combo}コンボ！ボーナス ${comboBonus}てん！`;
+              `${combo}コンボ！`;
+            
+            // 3回連続正解時に画像を表示
+            const rewardImage = document.getElementById("rewardImage");
+            const randomIndex = Math.floor(Math.random() * preloadedImages.length);
+            // プリロードした画像のsrcを使用
+            rewardImage.src = preloadedImages[randomIndex].src;
+            rewardImage.style.display = "block";
+            rewardImage.classList.add("show");
+            rewardImage.classList.remove("hide");
+            
+            // フェードアウトのアニメーション
+            setTimeout(() => {
+              rewardImage.classList.remove("show");
+              rewardImage.classList.add("hide");
+              // アニメーション完了後に非表示
+              rewardImage.addEventListener("animationend", () => {
+                rewardImage.style.display = "none";
+                rewardImage.classList.remove("hide");
+              }, { once: true });
+            }, 1000);
+          } else {
+            document.getElementById("message").textContent =
+              responseTime <= 2.0 ? `はやい！せいかい！+${points}てん` : `せいかい！+${points}てん`;
+          }
+          
+          score += points;
+          updateScoreDisplay();
+          responseTimes.push({ note: correctNote, time: responseTime });
+          attempts++;
+          if (attempts >= maxAttempts) {
+            endGame();
+          } else {
+            setTimeout(generateRandomNote, 1000);
+          }
+        } else {
+          score += penalty;
+          combo = 0;  // コンボをリセット
+          updateScoreDisplay();
+          mistakes++;
+          // mistakeCount[selectedNote] = (mistakeCount[selectedNote] || 0) + 1;
+          mistakeCount[correctNote] = (mistakeCount[correctNote] || 0) + 1;
+          document.getElementById("message").textContent = `もういちど！${penalty}てん`;
+          setTimeout(() => {
+            document.getElementById("message").textContent = "わかるかな？";
+          }, 1000);
+        }
+      } else {
+        // 復習モードの場合
+        if (selectedNote === correctNote) {
+          reviewCorrectCount++;
+          document.getElementById("message").textContent = `正解！`;
+          reviewIndex++;
+        } else {
+          document.getElementById("message").textContent = `不正解！`;
+        }
+        // reviewIndex++;
+        setTimeout(() => {
+            document.getElementById("message").textContent = "わかるかな？";
+        }, 1000);
+        setTimeout(generateRandomNote, 1000);
+      }
+    }
+
+    function endGame() {
+      const clearScore = Math.floor(gameState.maxScore * ADVENTURE_CONFIG.clearRate);
+      const isCleared = score >= clearScore;
+
+      // 結果表示要素の存在チェック
+      const resultText = document.getElementById("resultText");
+      const resultContainer = document.getElementById("resultContainer");
+      const restartButton = document.getElementById("restartButton");
+      const reviewButton = document.getElementById("reviewButton");
+
+      if (!resultText || !resultContainer) {
+        console.error("Result elements not found");
+        return;
+      }
+
+      if (gameState.mode === GAME_MODES.ADVENTURE) {
+        if (isCleared) {
+          // ステージクリア時の処理
+          showStageResult(true);
+          if (restartButton) {
+            restartButton.textContent = "次のステージへ";
+            restartButton.onclick = () => {
+              gameState.currentStage++;
+              if (gameState.currentStage <= Object.keys(STAGES).length) {
+                startStage(gameState.currentStage);
+                resultContainer.style.display = "none";
+      resetGame();
+      generateRandomNote();
+        } else {
+                // 全ステージクリア
+                showGameComplete();
+              }
+            };
+          }
+      } else {
+          // ステージ失敗時の処理
+          showStageResult(false);
+          if (restartButton) restartButton.style.display = "none";
+          if (reviewButton) reviewButton.style.display = "inline-block";
+        }
+      } else {
+        // ステージセレクトモードの場合は通常の結果表示
+        let totalTime = responseTimes.reduce((sum, r) => sum + r.time, 0);
+        let avgTime = totalTime / responseTimes.length || 0;
+        responseTimes.sort((a, b) => a.time - b.time);
+        let fastest = responseTimes.slice(0, 3);
+        let slowest = responseTimes.slice(-3);
+        let mistakesSorted = Object.entries(mistakeCount)
+          .sort((a, b) => b[1] - a[1])
+          .slice(0, 3);
+
+        let resultMessage = `
+          <p>🎵 ステージ${gameState.currentStage}終了 🎵</p>
+          <p><strong>とくてん:</strong> ${score}てん</p>
+          <p><strong>◯の音:</strong> ${responseTimes.length - mistakes}こ、
+             <strong>×の音:</strong> ${mistakes}こ</p>
+          <p><strong>平均の反応時間:</strong> ${avgTime.toFixed(2)} 秒</p>
+          <p><strong>はやかった音トップ3:</strong></p>
+          <p>${fastest.map(n => `${convertNoteToJapanese(n.note)}`).join("<br>")}</p>
+          <p><strong>おそかった音トップ3:</strong></p>
+          <p>${slowest.map(n => `${convertNoteToJapanese(n.note)}`).join("<br>")}</p>
+          <p><strong>まちがえた音トップ3:</strong></p>
+          <p>${mistakesSorted.map(m => `${convertNoteToJapanese(m[0])}(${m[1]}回)`).join("<br>")}</p>
+        `;
+        resultText.innerHTML = resultMessage;
+        if (restartButton) {
+          restartButton.textContent = "もう一度プレイ";
+          restartButton.style.display = "inline-block";
+        }
+      }
+      
+      resultContainer.style.display = "block";
+      document.getElementById("endGameButton").style.display = "none";
+    }
+
+    // 「もう一度プレイ」ボタン
+    function restartGame() {
+      document.getElementById("resultContainer").style.display = "none";
+      document.getElementById("message").textContent = "";
+      resetGame();
+      
+      if (gameState.mode === GAME_MODES.ADVENTURE) {
+        // アドベンチャーモードの場合は次のステージを開始
+        startStage(gameState.currentStage);
+      } else {
+        // ステージセレクトモードの場合は同じステージを再開
+        generateRandomNote();
+        document.getElementById("endGameButton").style.display = "inline-block";
+      }
+    }
+
+    // 「終了」ボタン (結果画面)
+    function exitGame() {
+      // 結果画面を非表示
+      document.getElementById("resultContainer").style.display = "none";
+      
+      // ゲーム画面の要素を非表示
+      document.getElementById('scoreDisplay').style.display = 'none';
+      document.querySelector('.staff-container').style.display = 'none';
+      document.getElementById('message').style.display = 'none';
+      document.querySelector('.piano').style.display = 'none';
+      
+      // ゲーム状態をリセット
+      document.getElementById("staff").innerHTML = "";
+      resetGame();
+      
+      // ボタンの表示状態を更新
+      document.getElementById("endGameButton").style.display = "none";
+      document.getElementById("startButton").style.display = "none";
+      
+      // モード選択画面を表示
+      showModeSelect();
+    }
+
+    // 白鍵・黒鍵のクリックやタッチで音を鳴らす
+    document.querySelectorAll('.piano .key').forEach(key => {
+      key.addEventListener('mousedown', () => {
+        const note = key.dataset.note;
+        playNote(note);
+        checkAnswer(note);
+      });
+      key.addEventListener('touchstart', (event) => {
+        event.preventDefault();
+        const note = event.target.dataset.note;
+        playNote(note);
+        checkAnswer(note);
+      });
+    });
+
+    async function demoMode() {
+      // デモモード中は他の操作を無効化
+      document.getElementById("startButton").disabled = true;
+      document.getElementById("endGameButton").disabled = true;
+
+      // 出題範囲の変数を使用
+      const demoNotes = generateNoteRange(noteRange.start, noteRange.end);
+      console.log('Demo notes:', demoNotes); // デバッグログ
+      
+      // デモでは最初の7音だけを使用
+      // const demoSelection = demoNotes.slice(0, 7);
+      const demoSelection = demoNotes;
+      console.log('Selected demo notes:', demoSelection); // デバッグログ
+      
+      // 生成された音符を順番に表示・再生
+      for (let note of demoSelection) {
+        // 音符を表示
+        let letter = note.charAt(0);
+        let octave = note.slice(1);
+        drawStaff(letter + "/" + octave, true);
+
+        // 鍵盤のオクターブを更新
+        updateKeyboardOctave(octave);
+
+        // 対応する鍵盤をハイライト
+        const key = document.querySelector(`.key[data-note="${note}"]`);
+        if (key) {
+          key.style.backgroundColor = '#e0e0e0';
+        }
+
+        // playNoteの完了を待つ
+        await playNote(note);
+
+        // 0.2秒待機
+        await new Promise(resolve => setTimeout(resolve, 100));
+
+        // ハイライトを元に戻す
+        if (key) {
+          key.style.backgroundColor = key.classList.contains('black') ? '#333' : 'white';
+        }
+      }
+
+      // デモ終了後、ボタンを再度有効化
+      document.getElementById("message").textContent = "";
+      document.getElementById("startButton").disabled = false;
+      document.getElementById("endGameButton").disabled = false;
+      
+      console.log('Demo mode completed'); // デバッグログ
+    }
+
+    // 鍵盤のオクターブを更新する関数
+    function updateKeyboardOctave(octave) {
+      const naturalKeys = ["C", "D", "E", "F", "G", "A", "B"];
+      const sharpKeys = ["C#", "D#", "F#", "G#", "A#"];
+
+      // 白鍵更新
+      const whiteKeys = document.querySelectorAll('.piano .key:not(.black)');
+      whiteKeys.forEach((key, idx) => {
+        let noteLetter = naturalKeys[idx];
+        if (idx === 0) {
+          key.dataset.note = "C" + octave;
+          key.textContent = "C" + octave;
+        } else {
+          key.dataset.note = noteLetter + octave;
+          key.textContent = "";
+        }
+      });
+
+      // 黒鍵更新
+      const blackKeys = document.querySelectorAll('.piano .key.black');
+      blackKeys.forEach((key, idx) => {
+        key.dataset.note = sharpKeys[idx] + octave;
+        key.textContent = "";
+      });
+    }
+
+    function convertNoteToJapanese(note) {
+      // 音名の変換テーブル
+      const noteNames = {
+        'C': 'ド',
+        'D': 'レ',
+        'E': 'ミ',
+        'F': 'ファ',
+        'G': 'ソ',
+        'A': 'ラ',
+        'B': 'シ'
+      };
+
+      // シャープの変換テーブル
+      const sharpNames = {
+        'C#': 'ドのシャープ',
+        'D#': 'レのシャープ',
+        'F#': 'ファのシャープ',
+        'G#': 'ソのシャープ',
+        'A#': 'ラのシャープ'
+      };
+
+      // シャープの音符かどうかチェック
+      if (note.includes('#')) {
+        const noteName = note.slice(0, 2); // C#, D# など
+        const octave = note.slice(-1);     // 最後の文字がオクターブ番号
+        return `${sharpNames[noteName]}（${octave}つめ）`;
+      } else {
+        const noteName = note.charAt(0);   // C, D など
+        const octave = note.slice(-1);     // 最後の文字がオクターブ番号
+        return `${noteNames[noteName]}（${octave}つめ）`;
+      }
+    }
+
+    // スコア表示を更新する関数
+    function updateScoreDisplay() {
+      document.getElementById("scoreDisplay").textContent = `${combo}コンボ　${score}てん`;
+    }
+
+    // モード選択画面を表示
+    function showModeSelect() {
+      console.log('showModeSelect called');  // デバッグログ
+      document.getElementById('modeSelect').style.display = 'block';
+      document.getElementById('stageSelect').style.display = 'none';
+      document.getElementById('gameElements').style.display = 'none';
+      document.getElementById('startButton').style.display = 'none';
+      document.getElementById('endGameButton').style.display = 'none';
+    }
+
+    // ステージ選択画面を表示
+    function showStageSelect() {
+      console.log('showStageSelect called');  // デバッグログ
+      document.getElementById('modeSelect').style.display = 'none';
+      document.getElementById('stageSelect').style.display = 'block';
+      document.getElementById('gameElements').style.display = 'none';
+    }
+
+    // アドベンチャーモード開始
+    function startAdventureMode() {
+      console.log('startAdventureMode called');  // デバッグログ
+      gameState.mode = GAME_MODES.ADVENTURE;
+      gameState.currentStage = 1;
+      startStage(gameState.currentStage);
+    }
+
+    // ステージセレクトモード開始
+    function startStageMode(stageNum) {
+      console.log('startStageMode called with stage:', stageNum);  // デバッグログ
+      gameState.mode = GAME_MODES.STAGE_SELECT;
+      gameState.currentStage = stageNum;
+      startStage(stageNum);
+    }
+
+    // ステージを開始する関数を更新
+    async function startStage(stageNum) {
+      console.log('Starting stage:', stageNum);
+      
+      const stage = STAGES[stageNum];
+      console.log('Stage config:', stage);
+      
+      noteRange.start = stage.start;
+      noteRange.end = stage.end;
+      maxAttempts = stage.questions;
+      gameState.maxScore = stage.questions * ADVENTURE_CONFIG.maxScorePerQuestion;
+      
+      // UIを更新
+      document.getElementById('modeSelect').style.display = 'none';
+      document.getElementById('stageSelect').style.display = 'none';
+      document.getElementById('gameElements').style.display = 'block';
+      
+      // メッセージを更新
+      document.getElementById('message').textContent = 'ステージ開始！';
+      
+      // ゲーム状態をリセット
+      resetGame();
+
+      // Tone.jsの初期化
+      if (!synth) {
+        await Tone.start();
+        synth = new Tone.Synth().toDestination();
+      }
+
+      // デモモードを実行
+      document.getElementById('message').textContent = 'このステージの音を確認しよう！';
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      await demoMode();
+
+      // デモ終了後、ゲーム開始
+      document.getElementById('message').textContent = 'スタートボタンを押してね';
+      document.getElementById('startButton').style.display = 'inline-block';
+    }
+
+    // ページ読み込み時の初期化とイベントリスナーの設定
+    window.onload = function() {
+      console.log('Window loaded');  // デバッグログ
+
+      // モード選択ボタンのイベントリスナー
+      document.getElementById('adventureModeBtn').addEventListener('click', () => {
+        console.log('Adventure mode button clicked');  // デバッグログ
+        startAdventureMode();
+      });
+
+      document.getElementById('stageSelectBtn').addEventListener('click', () => {
+        console.log('Stage select button clicked');  // デバッグログ
+        showStageSelect();
+      });
+
+      // ステージ選択ボタンのイベントリスナー
+      for (let i = 1; i <= 6; i++) {
+        document.getElementById(`stage${i}Btn`).addEventListener('click', () => {
+          console.log(`Stage ${i} button clicked`);  // デバッグログ
+          startStageMode(i);
+        });
+      }
+
+      // 戻るボタンのイベントリスナー
+      document.getElementById('backToModeBtn').addEventListener('click', () => {
+        console.log('Back button clicked');  // デバッグログ
+        showModeSelect();
+      });
+
+      // 初期表示
+      showModeSelect();
+    };
+
+    // ステージ結果表示用の関数
+    function showStageResult(isCleared) {
+      let resultMessage;
+      if (isCleared) {
+        resultMessage = `
+          <p>🎵 ステージ${gameState.currentStage}クリア！ 🎵</p>
+          <p><strong>とくてん:</strong> ${score}てん</p>
+          <p><strong>さいこうてん:</strong> ${gameState.maxScore}てん</p>
+          <p><strong>◯の音:</strong> ${responseTimes.length - mistakes}こ、
+             <strong>×の音:</strong> ${mistakes}こ</p>
+          <p><strong>クリアライン:</strong> ${Math.floor(gameState.maxScore * ADVENTURE_CONFIG.clearRate)}てん</p>
+        `;
+      } else {
+        resultMessage = `
+          <p>🎵 ステージ${gameState.currentStage}失敗... 🎵</p>
+          <p><strong>とくてん:</strong> ${score}てん</p>
+          <p><strong>さいこうてん:</strong> ${gameState.maxScore}てん</p>
+          <p><strong>クリアライン:</strong> ${Math.floor(gameState.maxScore * ADVENTURE_CONFIG.clearRate)}てん</p>
+          <p style="color: #a855f7;">ふくしゅうモードで<br>れんしゅうしてみよう！</p>
+        `;
+      }
+      document.getElementById("resultText").innerHTML = resultMessage;
+    }
+
+    // 全ステージクリア時の表示関数も追加
+    function showGameComplete() {
+      let resultMessage = `
+        <p>🎉 おめでとう！ 🎉</p>
+        <p>全ステージクリアです！</p>
+      `;
+      document.getElementById("resultText").innerHTML = resultMessage;
+      document.getElementById("restartButton").textContent = "モード選択へ";
+      document.getElementById("restartButton").onclick = showModeSelect;
+    }
+  </script>
+  <!-- デバッグ用 -->
+  <script src="https://unpkg.com/vconsole@latest/dist/vconsole.min.js"></script>
+  <script>
+    var vConsole = new VConsole();
+  </script>
+</body>
+
+</html>
